@@ -1,5 +1,6 @@
 package top.kmar.game
 
+import java.io.File
 import kotlin.math.max
 import kotlin.math.min
 
@@ -42,11 +43,6 @@ object ConsolePrinter {
     var index: Int = 0
         private set
 
-    init {
-        //System.load(File("./utils.dll").absolutePath)
-        System.load("D:\\Workspace\\jni\\cmake-build-release\\libjni.dll")
-    }
-
     const val FOREGROUND_BLUE = 0x1
     const val FOREGROUND_GREEN = 0x2
     const val FOREGROUND_RED = 0x4
@@ -78,9 +74,11 @@ object ConsolePrinter {
      * @param height 纵向字符数量
      * @param fontWidth 一个字符的宽度（宽高比固定为 1:2）
      * @param cache 缓存数量，必须大于 0
+     * @param path DLL 文件的路径
      */
     @JvmStatic
-    fun init(width: Int, height: Int, fontWidth: Int, cache: Int = 2) {
+    fun init(width: Int, height: Int, fontWidth: Int, cache: Int = 2, path: File = File("./utils.dll")) {
+        System.load(path.absolutePath)
         require(cache > 0) { "缓存数量[$cache]应当大于 0" }
         this.width = width
         this.height = height
