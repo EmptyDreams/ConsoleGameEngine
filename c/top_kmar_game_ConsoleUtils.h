@@ -29,7 +29,10 @@ JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_quickFillCharN
  * Method:    fillRect
  */
 JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_fillRectN
-        (JNIEnv *, jclass, jchar, jint, jint, jint, jint, jint, jint);
+        (JNIEnv *, jclass, jchar, jint, jint, jint, jint, jint);
+
+JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_fillRectAttrN
+        (JNIEnv *, jclass, jint, jint, jint, jint, jint, jint);
 
 /*
  * Class:     top_kmar_game_ConsolePrinter
@@ -47,18 +50,6 @@ JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_drawStringN
 
 JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_modifyAttrN
         (JNIEnv *, jclass, jint, jint, jint, jint, jint, jint);
-
-JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_drawLineN
-        (JNIEnv *, jclass, jchar, jint, jint, jint, jint, jint);
-
-JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_drawVerticalLineN
-        (JNIEnv *, jclass, jchar, jint, jint, jint, jint, jint);
-
-JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_drawDottedLineN
-        (JNIEnv *, jclass, jchar, jint, jint, jint, jint, jint, jboolean, jint, jint);
-
-JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_drawVerticalDottedLineN
-        (JNIEnv *, jclass, jchar, jint, jint, jint, jint, jint, jboolean, jint, jint);
 
 #ifdef __cplusplus
 }
