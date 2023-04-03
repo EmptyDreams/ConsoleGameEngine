@@ -2,3 +2,5 @@
 /.gradle/
 /out/
 /out/production/classes/
+/META-INF/
+/.idea/
