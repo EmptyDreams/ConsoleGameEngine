@@ -1,8 +1,6 @@
 package top.kmar.game
 
 import java.io.File
-import kotlin.math.max
-import kotlin.math.min
 
 typealias printer = ConsolePrinter
 
@@ -75,7 +73,7 @@ object ConsolePrinter {
      * 初始化控制台信息，开始使用前必须调用该函数。
      *
      * **注意：缓存数量一般用于解决闪屏问题，当程序性能被绘制速度限制时可以通过提高缓存数量预绘制图形来提高性能。
-     * 缓存数量较多时启动时会有明显的窗口抖动**
+     * 缓存数量较多时启动时会有明显的窗口闪动**
      *
      * @param width 横向字符数量
      * @param height 纵向字符数量
@@ -92,30 +90,10 @@ object ConsolePrinter {
         initN(width, height, fontWidth, cache)
     }
 
-    @JvmStatic
-    private fun clip(x: Int, y: Int, width: Int, height: Int): Rect2D {
-        val right = min(x + width, this.width)
-        val bottom = min(y + height, this.height)
-        val left = max(x, 0)
-        val top = max(y, 0)
-        if (right < left || bottom < top || left >= this.width || top >= this.height) return Rect2D.empty
-        return Rect2D(left, top, right - left, bottom - top)
-    }
-
     /** 快速清空全图的字符 */
     @JvmStatic
     fun quickClearAllChar(char: Char = ' ', index: Int = this.index) {
-        quickFillCharN(char, 0, 0, width * height, index)
-    }
-
-    /** 快速填充字符，若填充宽度超过当前行款，会跨行填充而非截止 */
-    @JvmStatic
-    fun quickFillChar(char: Char, x: Int, y: Int, width: Int, index: Int = this.index) {
-        val head = y * this.width + x
-        val tail = head + width
-        val bound = this.width * this.height
-        val amount = min(tail, bound) - head
-        quickFillCharN(char, x, y, amount, index)
+        quickFillChar(char, 0, 0, width * height, index)
     }
 
     /**
@@ -127,26 +105,13 @@ object ConsolePrinter {
      */
     @JvmStatic
     fun quickFillChar(char: Char, x1: Int, y1: Int, x2: Int, y2: Int, index: Int = this.index) {
-        val x = x1.coerceAtLeast(0)
-        val y = y1.coerceAtLeast(0)
-        val amount = x2.coerceAtMost(width) + y2.coerceAtMost(height) * width
-        quickFillCharN(char, x, y, amount, index)
+        quickFillChar(char, x1, y1, x2 + y2 * width, index)
     }
 
     /** 快速清空全图的 attr */
     @JvmStatic
     fun quickClearAllAttr(attr: Int = -1, index: Int = this.index) {
-        quickFillAtrN(attr, 0, 0, width * height, index)
-    }
-
-    /** 快速填充 attr，若填充宽度超过当前行宽，会跨行填充而非截止 */
-    @JvmStatic
-    fun quickFillAttr(attr: Int, x: Int, y: Int, width: Int, index: Int = this.index) {
-        val head = y * this.width + x
-        val tail = head + width
-        val bound = this.width * this.height
-        val amount = min(tail, bound) - head
-        quickFillAtrN(attr, x, y, amount, index)
+        quickFillAtr(attr, 0, 0, width * height, index)
     }
 
     /**
@@ -158,10 +123,7 @@ object ConsolePrinter {
      */
     @JvmStatic
     fun quickFillAttr(attr: Int, x1: Int, y1: Int, x2: Int, y2: Int, index: Int = this.index) {
-        val x = x1.coerceAtLeast(0)
-        val y = y1.coerceAtLeast(0)
-        val amount = x2.coerceAtMost(width) + y2.coerceAtMost(height) * width
-        quickFillAtrN(attr, x, y, amount, index)
+        quickFillAtr(attr, x1, y1, x2 + y2 * width, index)
     }
 
     /** 快速清空全图字符和 attr */
@@ -171,187 +133,14 @@ object ConsolePrinter {
         quickClearAllChar(char, index)
     }
 
-    /**
-     * 清空指定区域
-     *
-     * 如果想要清空全图请调用 [quickClearAllChar]、[quickClearAllAttr]、[quickClear]
-     */
     @JvmStatic
-    fun clearRect(
-        x: Int, y: Int, width: Int, height: Int,
-        char: Char = ' ', attr: Int = -1, index: Int = this.index
-    ) {
-        fillRect(char, x, y, width, height, index)
-        modifyAttr(attr, x, y, width, height, index)
-    }
+    fun getCharWidth(char: Char): Int =
+        if (char.code < 0x100) 1 else 2
 
-    /** 以指定字符绘制一个实心矩形 */
-    @JvmStatic
-    fun fillRect(
-        char: Char,
-        x: Int, y: Int, width: Int, height: Int,
-        index: Int = this.index
-    ) {
-        val bound = clip(x, y, width, height)
-        if (bound.isEmpty) return
-        val len = getCharWidth(char)
-        fillRectN(char, bound.x, bound.y, bound.width shr (len - 1), bound.height, index)
-    }
+    // ---------- native function ----------//
 
-    /** 以指定字符绘制一个空心矩形 */
     @JvmStatic
-    fun fillRectHollow(
-        char: Char,
-        x: Int, y: Int, width: Int, height: Int,
-        index: Int = this.index
-    ) {
-        val bound = clip(x, y, width, height)
-        if (bound.isEmpty) return
-        val len = getCharWidth(char)
-        fillRectHollowN(char, bound.x, bound.y, bound.width shr (len - 1), bound.height, index)
-    }
-
-    /**
-     * 绘制一个字符串（不换行）
-     * @param width 宽度限制（超出区域的部分将被删除）
-     */
-    @JvmStatic
-    fun drawStringLine(
-        text: String,
-        x: Int, y: Int, width: Int,
-        attr: Int = -1, index: Int = this.index
-    ) {
-        val bound = clip(x, y, width, 1)
-        if (bound.isEmpty) return
-        var start = 0
-        if (x < 0) {    // 如果起点为负数则计算真实的起始位置
-            var w = 0
-            for (i in text.indices) {
-                w += getCharWidth(text[i])
-                if (w + x >= 0) {
-                    start = i + 1
-                    break
-                }
-            }
-        }
-        var w = 0
-        var end = text.length
-        for (i in start until text.length) {
-            val tmp = getCharWidth(text[i])
-            if (w + tmp > bound.width) {
-                end = i
-                break
-            }
-            w += tmp
-        }
-        if (start == 0 && end == text.length)
-            drawStringN(text, bound.x, bound.y, bound.width, attr, index)
-        else
-            drawStringN(text.substring(start until end), bound.x, bound.y, bound.width, attr, index)
-    }
-
-    /**
-     * 绘制一个字符串，超出限定区域后换行显示。
-     * 注意，如果字符串超出了渲染范围但未超出输入的限定区域，超出渲染范围的内容将被删除而非换行。
-     */
-    @JvmStatic
-    fun drawStringRect(
-        text: String,
-        x: Int, y: Int, width: Int, height: Int,
-        attr: Int = -1, index: Int = this.index
-    ) {
-        val bound = clip(x, y, width, height)
-        if (bound.isEmpty) return
-        val sb = StringBuilder()
-        var w = 0
-        var line = y
-        text.forEach {
-            val tmp = getCharWidth(it)
-            if (w + tmp > width) {
-                drawStringLine(sb.toString(), x, line++, width, attr, index)
-                if (line - y == height) return
-                sb.clear()
-                w = 0
-            }
-            w += tmp
-            sb.append(it)
-        }
-        if (sb.isNotEmpty())
-            drawStringLine(sb.toString(), x, line, width, attr, index)
-    }
-
-    /** 以指定字符为填充绘制一条水平的直线 */
-    @JvmStatic
-    fun drawLine(
-        char: Char,
-        x: Int, y: Int, width: Int,
-        index: Int = this.index
-    ) {
-        fillRect(char, x, y, width, 1, index)
-    }
-
-    /** 以指定字符为填充绘制一条竖直的直线 */
-    @JvmStatic
-    fun drawVerticalLine(
-        char: Char,
-        x: Int, y: Int, height: Int,
-        index: Int = this.index
-    ) {
-        fillRect(char, x, y, 1, height, index)
-    }
-
-    /**
-     * 绘制水平的虚线
-     * @param char 填充字符
-     * @param width 总宽度
-     * @param lineLength 每条线的长度
-     * @param airLength 空白长度
-     * @param background 空白处是否应用 attr
-     */
-    @JvmStatic
-    fun drawDottedLine(
-        char: Char,
-        x: Int, y: Int, width: Int,
-        lineLength: Int, airLength: Int,
-        background: Boolean, attr: Int = -1, index: Int = this.index
-    ) {
-        val bound = clip(x, y, width, 1)
-        if (bound.isEmpty) return
-        drawDottedLineN(char, bound.x, bound.y, bound.width, lineLength, airLength, background, attr, index)
-    }
-
-    /**
-     * 绘制竖直的虚线
-     * @param char 填充字符
-     * @param height 高度
-     * @param lineLength 每条线的长度
-     * @param airLength 空白长度
-     * @param background 空白处是否应用 attr
-     */
-    @JvmStatic
-    fun drawVerticalDottedLine(
-        char: Char,
-        x: Int, y: Int, height: Int,
-        lineLength: Int, airLength: Int,
-        background: Boolean, attr: Int = -1, index: Int = this.index
-    ) {
-        val bound = clip(x, y, 1, height)
-        if (bound.isEmpty) return
-        drawVerticalDottedLineN(
-            char,
-            bound.x, bound.y, bound.height,
-            lineLength, airLength,
-            background, attr, index
-        )
-    }
-
-    /** 修改指定区域的填充属性 */
-    @JvmStatic
-    fun modifyAttr(attr: Int, x: Int, y: Int, width: Int, height: Int, index: Int = this.index) {
-        val bound = clip(x, y, width, height)
-        if (bound.isEmpty || attr == -1) return
-        modifyAttrN(attr, bound.x, bound.y, bound.width, bound.height, index)
-    }
+    private external fun initN(width: Int, height: Int, fontWidth: Int, cache: Int)
 
     /**
      * 刷新控制台显示，将指定下标的缓存设置为活动缓存。
@@ -359,86 +148,51 @@ object ConsolePrinter {
      * 即使缓存数量为一也应当定期调用该函数，否则无法隐藏输入光标。
      */
     @JvmStatic
-    fun flush(index: Int = this.index) = flushN(index)
+    external fun flush(index: Int = this.index)
+
+    /** 快速填充字符，若填充宽度超过当前行款，会跨行填充而非截止 */
+    @JvmStatic
+    external fun quickFillChar(char: Char, x: Int, y: Int, amount: Int, index: Int = this.index)
+
+    /** 快速填充 attr，若填充宽度超过当前行宽，会跨行填充而非截止 */
+    @JvmStatic
+    external fun quickFillAtr(attr: Int, x: Int, y: Int, amount: Int, index: Int = this.index)
 
     @JvmStatic
-    fun getCharWidth(char: Char): Int =
-        if (char.code < 0x100) 1 else 2
-
-    // ---------- native and private function ----------//
-
-    @JvmStatic
-    private external fun initN(width: Int, height: Int, fontWidth: Int, cache: Int)
-
-    @JvmStatic
-    private external fun quickFillCharN(char: Char, x: Int, y: Int, amount: Int, index: Int)
-
-    @JvmStatic
-    private external fun quickFillAtrN(attr: Int, x: Int, y: Int, amount: Int, index: Int)
-
-    @JvmStatic
-    private external fun drawDottedLineN(
-        char: Char,
-        x: Int, y: Int, width: Int,
-        lineLength: Int, airLength: Int,
-        background: Boolean, attr: Int, index: Int
-    )
-
-    @JvmStatic
-    private external fun drawVerticalDottedLineN(
-        char: Char,
-        x: Int, y: Int, height: Int,
-        lineLength: Int, airLength: Int,
-        background: Boolean, attr: Int, index: Int
-    )
-
-    @JvmStatic
-    private external fun fillRectN(char: Char, x: Int, y: Int, width: Int, height: Int, index: Int)
-
-    @JvmStatic
-    private external fun fillRectAttrN(attr: Int, x: Int, y: Int, width: Int, height: Int, index: Int)
+    external fun fillRect(char: Char, x: Int, y: Int, width: Int, height: Int, index: Int = this.index)
 
     /** 使用指定字符填充一个空心矩形 */
     @JvmStatic
-    private external fun fillRectHollowN(char: Char, x: Int, y: Int, width: Int, height: Int, index: Int)
-
-    @JvmStatic
-    private external fun fillRectHollowAttrN(attr: Int, x: Int, y: Int, width: Int, height: Int, index: Int)
+    external fun fillRectHollow(char: Char, x: Int, y: Int, width: Int, height: Int, index: Int = this.index)
 
     /** 修改指定区域的填充属性 */
     @JvmStatic
-    private external fun modifyAttrN(attr: Int, x: Int, y: Int, width: Int, height: Int, index: Int)
+    external fun modifyAttr(attr: Int, x: Int, y: Int, width: Int, height: Int, index: Int = this.index)
 
     /**
      * 打印一个字符串
      * @param text 要打印的字符串
-     * @param width 打印宽度
-     * @param attr 填充属性
      */
     @JvmStatic
-    private external fun drawStringN(text: String, x: Int, y: Int, width: Int, attr: Int, index: Int)
+    external fun drawString(text: String, x: Int, y: Int, index: Int = this.index)
 
+    /**
+     * 以指定字符为填充绘制一条虚线。
+     *
+     * 偏移量为 0 时将以实现的第一格为开始进行绘制，通过调整偏移量可以修改虚线的起始形状（偏移后不会超出绘制边界）。
+     *
+     * @param charWidth 每个字符的宽度（1 或 2）
+     * @param width 虚线总长（单位：字符）
+     * @param lineLength 每一段实线的长度（单位：字符）
+     * @param spaceLength 两个实线之间的长度（单位：格）
+     * @param offset 横向偏移量（单位：字符），取值范围在 [0, lineLength + spaceLength)
+     */
     @JvmStatic
-    private external fun flushN(index: Int)
-
-}
-
-/** 用于表示一个矩形区域 */
-data class Rect2D(val x: Int, val y: Int, val width: Int, val height: Int) {
-
-    val right: Int
-        get() = x + width
-
-    val bottom: Int
-        get() = y + height
-
-    val isEmpty: Boolean
-        get() = width == 0 || height == 0
-
-    companion object {
-
-        val empty = Rect2D(0, 0, 0, 0)
-
-    }
+    external fun drawDottedLine(
+        char: Char, charWidth: Int,
+        x: Int, y: Int, width: Int, height: Int,
+        lineLength: Int, spaceLength: Int, offset: Int,
+        index: Int  = this.index
+    )
 
 }

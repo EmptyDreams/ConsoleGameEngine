@@ -7,11 +7,10 @@ buildscript {
 
 plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.8.0'
-    id 'java'
 }
 
 group = 'top.kmar.game'
-version = '0.0.1-SNAPSHOT'
+version = '0.0.3-SNAPSHOT'
 
 repositories {
     maven { url = "https://maven.aliyun.com/repository/public" }
@@ -20,6 +19,7 @@ repositories {
 
 dependencies {
     implementation files('./utils.dll')
+    //implementation group: 'it.unimi.dsi', name: 'fastutil', version: '8.5.12'
 }
 
 kotlin {
