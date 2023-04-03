@@ -76,7 +76,7 @@ static HANDLE createHandle(jint width, jint height, jint fontWidth, HWND console
     return result;
 }
 
-JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_initN
+JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_init
         (JNIEnv*, jclass, jint width, jint height, jint fontWidth, jint cache) {
     HWND consoleWindow = GetConsoleWindow();
     SetConsoleOutputCP(CP_UTF8);
@@ -91,7 +91,7 @@ JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_initN
     }
 }
 
-JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_flushN
+JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_flush
         (JNIEnv *, jclass, jint index) {
     HANDLE buffer = buffers[index];
     // 隐藏光标
@@ -103,15 +103,7 @@ JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_flushN
     SetConsoleActiveScreenBuffer(buffer);
 }
 
-JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_quickFillAtrN
-        (JNIEnv *, jclass, jint attr, jint x, jint y, jint amount, jint index) {
-    HANDLE buffer = buffers[index];
-    COORD coord = {(SHORT) x, (SHORT) y};
-    DWORD tmp = 0;
-    FillConsoleOutputAttribute(buffer, attr, amount, coord, &tmp);
-}
-
-JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_quickFillCharN
+JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_quickFillChar
         (JNIEnv *, jclass, jchar c, jint x, jint y, jint amount, jint index) {
     HANDLE buffer = buffers[index];
     COORD coord = {(SHORT) x, (SHORT) y};
@@ -120,7 +112,17 @@ JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_quickFillCharN
     FillConsoleOutputCharacterW(buffer, c, amount, coord, &tmp);
 }
 
-JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_fillRectN
+JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_quickFillAtr
+        (JNIEnv *, jclass, jint attr, jint x, jint y, jint amount, jint index) {
+    HANDLE buffer = buffers[index];
+    COORD coord = {(SHORT) x, (SHORT) y};
+    DWORD tmp = 0;
+    FillConsoleOutputAttribute(buffer, attr, amount, coord, &tmp);
+}
+
+#define fillRect Java_top_kmar_game_ConsolePrinter_fillRect
+
+JNIEXPORT void JNICALL fillRect
         (JNIEnv *, jclass, jchar c, jint x, jint y, jint width, jint height, jint index) {
     HANDLE buffer = buffers[index];
     for (int i = 0; i != height; ++i) {
@@ -128,18 +130,10 @@ JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_fillRectN
     }
 }
 
-JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_fillRectAttrN
-        (JNIEnv *, jclass, jint attr, jint x, jint y, jint width, jint height, jint index) {
-    HANDLE buffer = buffers[index];
-    for (int i = 0; i != height; ++i) {
-        fillAttr(buffer, attr, x, y, width);
-    }
-}
-
-JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_fillRectHollowN
+JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_fillRectHollow
         (JNIEnv* env, jclass class, jchar c, jint x, jint y, jint width, jint height, jint attr, jint index) {
     if (height < 3)
-        Java_top_kmar_game_ConsolePrinter_fillRectN(env, class, c, x, y, width, height, index);
+        fillRect(env, class, c, x, y, width, height, index);
     else {
         HANDLE buffer = buffers[index];
         jint len = (c >= 0x100) + 1;
@@ -162,7 +156,20 @@ JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_fillRectHollowN
     }
 }
 
-JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_drawStringN
+#define modifyAttr Java_top_kmar_game_ConsolePrinter_modifyAttr
+
+JNIEXPORT void JNICALL modifyAttr
+        (JNIEnv *, jclass, jint attr, jint x, jint y, jint width, jint height, jint index) {
+    HANDLE buffer = buffers[index];
+    COORD coord = {(SHORT) x, (SHORT) y};
+    DWORD tmp = 0;
+    for (int i = 0; i != height; ++i) {
+        FillConsoleOutputAttribute(buffer, attr, width, coord, &tmp);
+        ++coord.Y;
+    }
+}
+
+JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_drawString
         (JNIEnv* env, jclass, jstring text, jint x, jint y, jint width, jint attr, jint index) {
     HANDLE buffer = buffers[index];
     const char* array = (*env)->GetStringUTFChars(env, text, JNI_FALSE);
@@ -175,39 +182,38 @@ JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_drawStringN
     (*env)->ReleaseStringUTFChars(env, text, array);
 }
 
-JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_modifyAttrN
-        (JNIEnv *, jclass, jint attr, jint x, jint y, jint width, jint height, jint index) {
-    HANDLE buffer = buffers[index];
-    COORD coord = {(SHORT) x, (SHORT) y};
-    DWORD tmp = 0;
-    for (int i = 0; i != height; ++i) {
-        FillConsoleOutputAttribute(buffer, attr, width, coord, &tmp);
-        ++coord.Y;
-    }
-}
-
-JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_drawDottedLineN
-        (JNIEnv *, jclass, jchar c, jint x, jint y, jint width, jint lineLength, jint airLength, jboolean bg, jint attr, jint index) {
-    HANDLE buffer = buffers[index];
-    COORD coord = {(SHORT) x, (SHORT) y};
-    DWORD tmp = 0;
-    if (bg) {
-        FillConsoleOutputAttribute(buffer, attr, width, coord, &tmp);
-        attr = -1;
-    }
-    jint offset = c >= 0;
-    while (coord.X < width) {
-        jint length = coord.X + lineLength < width ? lineLength : width - coord.X;
-        fillOutput(buffer, c, coord.X, y, length);
-        if (attr != -1) fillAttr(buffer, attr, coord.X, y, length << offset);
-        coord.X += lineLength;
-        length = coord.X + airLength < width ? airLength : width - coord.X;
-        if (length > 0) {
-            fillOutput(buffer, ' ', coord.X, y, length);
-            if (attr != -1)
-                fillAttr(buffer, attr, coord.X, y, length << offset);
+JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_drawDottedLine(
+        JNIEnv* env, jclass class,
+        jchar c, jint charWidth,
+        jint x, jint y, jint width, jint height,
+        jint lineLength, jint airLength, jint offset,
+        jint index
+) {
+    jint right = x + width;
+    --charWidth;
+    if (offset != 0) {
+        if (offset < lineLength) {
+            jint length = min(lineLength - offset, width);
+            fillRect(env, class, c, x, y, length >> charWidth, height, index);
+            x += length;
+            length = min(airLength, width - length);
+            fillRect(env, class, ' ', x, y, length, height, index);
+            x += length;
+        } else {
+            jint length = min(lineLength + airLength - offset, width);
+            fillRect(env, class, ' ', x, y, length, height, index);
+            x += length;
         }
-        coord.X += airLength;
+    }
+    while (true) {
+        jint length = min(lineLength, right - x);
+        if (length == 0) break;
+        fillRect(env, class, c, x, y, length >> charWidth, height, index);
+        x += length;
+        length = min(airLength, right - x);
+        if (length == 0) break;
+        fillRect(env, class, ' ', x, y, length, height, index);
+        x += length;
     }
 }
 
