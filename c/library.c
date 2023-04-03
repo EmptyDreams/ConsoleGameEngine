@@ -76,7 +76,7 @@ static HANDLE createHandle(jint width, jint height, jint fontWidth, HWND console
     return result;
 }
 
-JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_init
+JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_initN
         (JNIEnv*, jclass, jint width, jint height, jint fontWidth, jint cache) {
     HWND consoleWindow = GetConsoleWindow();
     SetConsoleOutputCP(CP_UTF8);

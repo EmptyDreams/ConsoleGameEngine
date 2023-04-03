@@ -12,7 +12,7 @@ extern "C" {
  * Class:     top_kmar_game_ConsolePrinter
  * Method:    init
  */
-JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_init
+JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_initN
   (JNIEnv *, jclass, jint, jint, jint, jint);
 
 JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_flush
