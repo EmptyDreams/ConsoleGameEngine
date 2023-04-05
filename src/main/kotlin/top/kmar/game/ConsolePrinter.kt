@@ -195,4 +195,12 @@ object ConsolePrinter {
         index: Int  = this.index
     )
 
+    @JvmStatic
+    external fun drawVerticalDottedLine(
+        char: Char, charWidth: Int,
+        x: Int, y: Int, width: Int, height: Int,
+        lineLength: Int, spaceLength: Int, offset: Int,
+        index: Int = this.index
+    )
+
 }

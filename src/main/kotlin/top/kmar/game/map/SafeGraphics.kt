@@ -169,17 +169,41 @@ class SafeGraphics(
      * @param width 虚线总长
      * @param lineLength 每一段实线的长度
      * @param spaceLength 两个实线之间的长度
-     * @param bg 空白处是否应用 attr
      */
     fun drawDottedLine(
         char: Char,
         x: Int, y: Int, width: Int, height: Int,
-        lineLength: Int, spaceLength: Int,
-        bg: Boolean, attr: Int = -1
+        lineLength: Int, spaceLength: Int
     ) {
         val bound = clip(x, y, width, 1)
         if (bound.isEmpty) return
+        ConsolePrinter.drawDottedLine(
+            char, getCharWidth(char),
+            bound.x, bound.y, bound.width, bound.height,
+            lineLength, spaceLength, (bound.x - x) % (lineLength + spaceLength),
+            index
+        )
+    }
 
+    /**
+     * 以指定字符填充一条竖直的虚线
+     * @param height 虚线总长
+     * @param lineLength 每一段虚线的长度
+     * @param spaceLength 两个实线之间的长度
+     */
+    fun drawVerticalDottedLine(
+        char: Char,
+        x: Int, y: Int,width: Int, height: Int,
+        lineLength: Int, spaceLength: Int
+    ) {
+        val bound = clip(x, y, width, height)
+        if (bound.isEmpty) return
+        ConsolePrinter.drawVerticalDottedLine(
+            char, getCharWidth(char),
+            bound.x, bound.y, bound.width, bound.height,
+            lineLength, spaceLength, (bound.y - y) % (lineLength + spaceLength),
+            index
+        )
     }
 
 }

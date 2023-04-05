@@ -1,5 +1,8 @@
 package top.kmar.game.map
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectRBTreeMap
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
+import top.kmar.game.ConsolePrinter
 import java.util.stream.Stream
 
 /**
@@ -11,11 +14,11 @@ import java.util.stream.Stream
  */
 class GMap(val width: Int, val height: Int) {
 
-    private val entities = HashSet<GEntity>(width * height)
+    private val entities = Int2ObjectRBTreeMap<MutableSet<GEntity>>()
 
     /** 所有实体 */
     val allEntity: Stream<GEntity>
-        get() = entities.stream().filter { !it.died }
+        get() = entities.values.stream().flatMap { it.stream() }.filter { !it.died }
     /** 所有可视实体 */
     val visibleEntity: Stream<GEntity>
         get() = allEntity.filter { it.visible }
@@ -31,8 +34,9 @@ class GMap(val width: Int, val height: Int) {
     }
 
     /** 放置一个实体 */
-    fun putEntity(entity: GEntity) {
-        entities.add(entity)
+    fun putEntity(entity: GEntity, layout: Int) {
+        val list = entities.getOrPut(layout) { ObjectOpenHashSet(width * height) }
+        list.add(entity)
         entity.onGenerate(this)
         checkCollision(entity)
             .forEach {
@@ -41,14 +45,23 @@ class GMap(val width: Int, val height: Int) {
             }
     }
 
+    fun render() {
+        visibleEntity.forEach {
+            val graphics = SafeGraphics(it.x, it.y, it.width, it.height, ConsolePrinter.index)
+            it.render(graphics)
+        }
+    }
+
     /** 每一次游戏循环结束后调用该函数更新地图信息 */
     fun update() {
-        val itor = entities.iterator()
-        while (itor.hasNext()) {
-            val item = itor.next()
-            if (item.died) {
-                itor.remove()
-                item.onRemove(this)
+        entities.values.forEach { list ->
+            val itor = list.iterator()
+            while (itor.hasNext()) {
+                val item = itor.next()
+                if (item.died) {
+                    itor.remove()
+                    item.onRemove(this)
+                }
             }
         }
     }

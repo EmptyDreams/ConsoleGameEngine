@@ -19,7 +19,7 @@ repositories {
 
 dependencies {
     implementation files('./utils.dll')
-    //implementation group: 'it.unimi.dsi', name: 'fastutil', version: '8.5.12'
+    implementation group: 'it.unimi.dsi', name: 'fastutil', version: '8.5.12'
 }
 
 kotlin {
