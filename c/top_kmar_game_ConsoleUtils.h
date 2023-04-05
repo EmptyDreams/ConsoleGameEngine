@@ -56,6 +56,14 @@ JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_drawDottedLine(
         jint index
 );
 
+JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_drawVerticalDottedLine(
+        JNIEnv *, jclass,
+        jchar c, jint charWidth,
+        jint x, jint y, jint width, jint height,
+        jint lineLength, jint airLength, jint offset,
+        jint index
+);
+
 #ifdef __cplusplus
 }
 #endif

@@ -217,30 +217,38 @@ JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_drawDottedLine(
     }
 }
 
-JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_drawVerticalDottedLineN
-        (JNIEnv *, jclass, jchar c, jint x, jint y, jint height, jint lineLength, jint airLength, jboolean bg, jint attr, jint index) {
-    HANDLE buffer = buffers[index];
-    bool space = false;
-    for (int i = 0, j = 0; i != height; ++i, ++j) {
-        if (space) {
-            if (j == airLength) {
-                j = 0;
-                space = false;
-            }
+JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_drawVerticalDottedLine(
+        JNIEnv* env, jclass class,
+        jchar c, jint charWidth,
+        jint x, jint y, jint width, jint height,
+        jint lineLength, jint airLength, jint offset,
+        jint index
+) {
+    jint bottom = y + height;
+    --charWidth;
+    if (offset != 0) {
+        if (offset < lineLength) {
+            jint h = min(lineLength - offset, height);
+            fillRect(env, class, c, x, y, width >> charWidth, offset, index);
+            y += h;
+            h = min(airLength, height - h);
+            fillRect(env, class, ' ', x, y, width, h, index);
+            y += h;
         } else {
-            if (j == lineLength) {
-                j = 0;
-                space = true;
-            }
+            jint h = min(lineLength + airLength - offset, height);
+            fillRect(env, class, ' ', x, y, width, h, index);
+            y += h;
         }
-        if (space) {
-            fillOutput(buffer, ' ', x, y, 1);
-            if (bg && attr != -1) fillAttr(buffer, attr, x, y, 1);
-        } else {
-            fillOutput(buffer, c, x, y, 1);
-            if (attr != -1) fillAttr(buffer, attr, x, y, 1);
-        }
-        ++y;
+    }
+    while (true) {
+        jint h = min(lineLength, bottom - y);
+        if (h == 0) break;
+        fillRect(env, class, c, x, y, width >> charWidth, lineLength, index);
+        y += h;
+        h = min(airLength, bottom - y);
+        if (h == 0) break;
+        fillRect(env, class, ' ', x, y, width, airLength, index);
+        y += h;
     }
 }
 
