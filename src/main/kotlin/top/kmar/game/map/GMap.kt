@@ -3,6 +3,7 @@ package top.kmar.game.map
 import it.unimi.dsi.fastutil.ints.Int2ObjectRBTreeMap
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import top.kmar.game.ConsolePrinter
+import java.io.File
 import java.util.stream.Stream
 
 /**
@@ -12,7 +13,11 @@ import java.util.stream.Stream
  *
  * @author 空梦
  */
-class GMap(val width: Int, val height: Int) {
+class GMap(val width: Int, val height: Int, fontWidth: Int, cache: Int, file: File = File("./libs/utils.dll")) {
+
+    init {
+        ConsolePrinter.init(width, height, fontWidth, cache, file)
+    }
 
     private val entities = Int2ObjectRBTreeMap<MutableSet<GEntity>>()
 
@@ -51,6 +56,7 @@ class GMap(val width: Int, val height: Int) {
             val graphics = SafeGraphics(this, it.x, it.y, it.width, it.height, ConsolePrinter.index)
             it.render(graphics)
         }
+        ConsolePrinter.flush()
     }
 
     /** 每一次游戏循环结束后调用该函数更新地图信息 */

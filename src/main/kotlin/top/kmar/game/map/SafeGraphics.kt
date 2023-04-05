@@ -35,7 +35,7 @@ class SafeGraphics internal constructor(
     fun fillRect(char: Char, x: Int, y: Int, width: Int, height: Int, attr: Int = -1) {
         val bound = clip(x, y, width, height)
         if (bound.isEmpty) return
-        ConsolePrinter.fillRect(char, bound.x, bound.y, bound.width, bound.height, index)
+        ConsolePrinter.fillRect(char, bound.x, bound.y, bound.width shr (getCharWidth(char) - 1), bound.height, index)
         if (attr != -1)
             ConsolePrinter.modifyAttr(attr, bound.x, bound.y, bound.width, bound.height, index)
     }
@@ -47,19 +47,19 @@ class SafeGraphics internal constructor(
         if (bound.isEmpty) return
         val charWidth = getCharWidth(char)
         val length = bound.width shr (charWidth - 1)
-        if (bound.y == y) {
+        if (bound.y == this.y + y) {
             if (attr != -1) ConsolePrinter.modifyAttr(attr, bound.x, y, bound.width, index)
             ConsolePrinter.quickFillChar(char, bound.x, y, length, index)
         }
-        if (bound.bottom == y + height - 1) {
+        if (bound.bottom == this.y + y + height - 1) {
             if (attr != -1) ConsolePrinter.modifyAttr(attr, bound.x, bound.bottom, bound.width, index)
             ConsolePrinter.quickFillChar(char, bound.x, bound.bottom, length, index)
         }
-        if (bound.x == x) {
+        if (bound.x == this.x + x) {
             if (attr != -1) ConsolePrinter.modifyAttr(attr, x, bound.y + 1, charWidth, bound.height - 2, index)
-            ConsolePrinter.fillRect(char, x, bound.y + 1, charWidth, bound.height - 2, index)
+            ConsolePrinter.fillRect(char, bound.x, bound.y + 1, charWidth, bound.height - 2, index)
         }
-        if (bound.right == x + width - 1) {
+        if (bound.right == this.x + x + width - 1) {
             val left = bound.right - charWidth + 1
             if (attr != -1) ConsolePrinter.modifyAttr(attr, left, bound.y + 1, charWidth, bound.height, index)
             ConsolePrinter.fillRect(char, left, bound.y + 1, charWidth, bound.height - 2, index)
@@ -84,7 +84,7 @@ class SafeGraphics internal constructor(
         var bound = clip(x, y, maxWidth, 1)
         if (bound.isEmpty) return 0
         val offset = offsetX - x
-        val start = if (offset < 0) 0 else {
+        val start = if (offset <= 0) 0 else {
             var i = 0
             var width = 0
             while (i != text.length) {
@@ -173,14 +173,14 @@ class SafeGraphics internal constructor(
     fun drawDottedLine(
         char: Char,
         x: Int, y: Int, width: Int, height: Int,
-        lineLength: Int, spaceLength: Int
+        lineLength: Int, spaceLength: Int, offset: Int = 0
     ) {
-        val bound = clip(x, y, width, 1)
+        val bound = clip(x, y, width, height)
         if (bound.isEmpty) return
         ConsolePrinter.drawDottedLine(
             char, getCharWidth(char),
             bound.x, bound.y, bound.width, bound.height,
-            lineLength, spaceLength, (bound.x - x) % (lineLength + spaceLength),
+            lineLength, spaceLength, (bound.x - x + offset) % (lineLength + spaceLength),
             index
         )
     }
@@ -194,14 +194,14 @@ class SafeGraphics internal constructor(
     fun drawVerticalDottedLine(
         char: Char,
         x: Int, y: Int,width: Int, height: Int,
-        lineLength: Int, spaceLength: Int
+        lineLength: Int, spaceLength: Int, offset: Int = 0
     ) {
         val bound = clip(x, y, width, height)
         if (bound.isEmpty) return
         ConsolePrinter.drawVerticalDottedLine(
             char, getCharWidth(char),
             bound.x, bound.y, bound.width, bound.height,
-            lineLength, spaceLength, (bound.y - y) % (lineLength + spaceLength),
+            lineLength, spaceLength, (bound.y - y + offset) % (lineLength + spaceLength),
             index
         )
     }

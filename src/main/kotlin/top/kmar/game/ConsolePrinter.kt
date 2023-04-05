@@ -129,7 +129,8 @@ object ConsolePrinter {
     /** 快速清空全图字符和 attr */
     @JvmStatic
     fun quickClear(char: Char = ' ', attr: Int = -1, index: Int = this.index) {
-        quickClearAllAttr(attr, index)
+        if (attr != -1)
+            quickClearAllAttr(attr, index)
         quickClearAllChar(char, index)
     }
 
