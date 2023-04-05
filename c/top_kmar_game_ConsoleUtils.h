@@ -46,7 +46,7 @@ JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_modifyAttr
  * Method:    fillRectHollow
  */
 JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_drawString
-        (JNIEnv *, jclass, jstring, jint, jint, jint, jint, jint);
+        (JNIEnv *, jclass, jstring, jint, jint, jint);
 
 JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_drawDottedLine(
         JNIEnv *, jclass,

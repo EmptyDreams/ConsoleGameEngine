@@ -170,14 +170,12 @@ JNIEXPORT void JNICALL modifyAttr
 }
 
 JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_drawString
-        (JNIEnv* env, jclass, jstring text, jint x, jint y, jint width, jint attr, jint index) {
+        (JNIEnv* env, jclass, jstring text, jint x, jint y, jint index) {
     HANDLE buffer = buffers[index];
     const char* array = (*env)->GetStringUTFChars(env, text, JNI_FALSE);
     jsize length = (*env)->GetStringUTFLength(env, text);
     COORD coord = {(SHORT) x, (SHORT) y};
     DWORD tmp = 0;
-    if (attr != -1)
-        FillConsoleOutputAttribute(buffer, attr, width, coord, &tmp);
     WriteConsoleOutputCharacter(buffer, array, length, coord, &tmp);
     (*env)->ReleaseStringUTFChars(env, text, array);
 }
@@ -229,7 +227,7 @@ JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_drawVerticalDottedLine(
     if (offset != 0) {
         if (offset < lineLength) {
             jint h = min(lineLength - offset, height);
-            fillRect(env, class, c, x, y, width >> charWidth, offset, index);
+            fillRect(env, class, c, x, y, width >> charWidth, h, index);
             y += h;
             h = min(airLength, height - h);
             fillRect(env, class, ' ', x, y, width, h, index);
@@ -243,11 +241,11 @@ JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_drawVerticalDottedLine(
     while (true) {
         jint h = min(lineLength, bottom - y);
         if (h == 0) break;
-        fillRect(env, class, c, x, y, width >> charWidth, lineLength, index);
+        fillRect(env, class, c, x, y, width >> charWidth, h, index);
         y += h;
         h = min(airLength, bottom - y);
         if (h == 0) break;
-        fillRect(env, class, ' ', x, y, width, airLength, index);
+        fillRect(env, class, ' ', x, y, width, h, index);
         y += h;
     }
 }
