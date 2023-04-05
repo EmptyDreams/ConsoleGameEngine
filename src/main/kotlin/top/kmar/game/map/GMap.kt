@@ -45,9 +45,10 @@ class GMap(val width: Int, val height: Int) {
             }
     }
 
+    /** 渲染所有实体 */
     fun render() {
         visibleEntity.forEach {
-            val graphics = SafeGraphics(it.x, it.y, it.width, it.height, ConsolePrinter.index)
+            val graphics = SafeGraphics(this, it.x, it.y, it.width, it.height, ConsolePrinter.index)
             it.render(graphics)
         }
     }

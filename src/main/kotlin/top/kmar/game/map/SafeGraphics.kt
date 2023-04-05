@@ -9,7 +9,7 @@ import kotlin.math.min
  * 画笔
  * @author 空梦
  */
-class SafeGraphics(
+class SafeGraphics internal constructor(
     /** 画笔在画布中的 X 轴坐标 */
     val x: Int,
     /** 画笔在画布中的 Y 轴坐标 */
@@ -207,3 +207,16 @@ class SafeGraphics(
     }
 
 }
+
+@JvmName("createSafeGraphics")
+fun SafeGraphics(map: GMap, x: Int, y: Int, width: Int, height: Int, index: Int = ConsolePrinter.index): SafeGraphics {
+    val left = x.coerceAtLeast(0)
+    val top = y.coerceAtLeast(0)
+    val right = (x + width).coerceAtMost(map.width)
+    val bottom = (y + height).coerceAtMost(map.height)
+    return SafeGraphics(x, y, right - left, bottom - top, index)
+}
+
+@JvmName("createHalfSafeGraphics")
+fun HalfSafeGraphics(x: Int, y: Int, width: Int, height: Int, index: Int): SafeGraphics =
+    SafeGraphics(x, y, width, height, index)
