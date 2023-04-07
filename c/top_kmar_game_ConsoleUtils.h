@@ -21,7 +21,7 @@ JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_flush
 JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_quickFillChar
         (JNIEnv *, jclass, jchar, jint, jint, jint, jint);
 
-JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_quickFillAtr
+JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_quickFillAttr
         (JNIEnv *, jclass, jint, jint, jint, jint, jint);
 
 /*

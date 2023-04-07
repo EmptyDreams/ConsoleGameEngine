@@ -112,7 +112,7 @@ JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_quickFillChar
     FillConsoleOutputCharacterW(buffer, c, amount, coord, &tmp);
 }
 
-JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_quickFillAtr
+JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_quickFillAttr
         (JNIEnv *, jclass, jint attr, jint x, jint y, jint amount, jint index) {
     HANDLE buffer = buffers[index];
     COORD coord = {(SHORT) x, (SHORT) y};
