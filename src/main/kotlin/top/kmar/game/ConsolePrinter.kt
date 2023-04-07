@@ -110,8 +110,8 @@ object ConsolePrinter {
 
     /** 快速清空全图的 attr */
     @JvmStatic
-    fun quickClearAllAttr(attr: Int = -1, index: Int = this.index) {
-        quickFillAtr(attr, 0, 0, width * height, index)
+    fun quickClearAllAttr(attr: Int, index: Int = this.index) {
+        quickFillAttr(attr, 0, 0, width * height, index)
     }
 
     /**
@@ -123,7 +123,9 @@ object ConsolePrinter {
      */
     @JvmStatic
     fun quickFillAttr(attr: Int, x1: Int, y1: Int, x2: Int, y2: Int, index: Int = this.index) {
-        quickFillAtr(attr, x1, y1, x2 + y2 * width, index)
+        val start = x1 + y1 * width
+        val end = x2 + y2 * width
+        quickFillAttr(attr, x1, y1, end - start, index)
     }
 
     /** 快速清空全图字符和 attr */
@@ -157,7 +159,7 @@ object ConsolePrinter {
 
     /** 快速填充 attr，若填充宽度超过当前行宽，会跨行填充而非截止 */
     @JvmStatic
-    external fun quickFillAtr(attr: Int, x: Int, y: Int, amount: Int, index: Int = this.index)
+    external fun quickFillAttr(attr: Int, x: Int, y: Int, amount: Int, index: Int = this.index)
 
     @JvmStatic
     external fun fillRect(char: Char, x: Int, y: Int, width: Int, height: Int, index: Int = this.index)
