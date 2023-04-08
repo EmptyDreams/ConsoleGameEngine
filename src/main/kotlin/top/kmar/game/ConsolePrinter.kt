@@ -2,8 +2,6 @@ package top.kmar.game
 
 import java.io.File
 
-typealias printer = ConsolePrinter
-
 /**
  * 控制台操作类。
  *
@@ -48,6 +46,9 @@ object ConsolePrinter {
     @JvmStatic
     var index: Int = 0
         private set
+    @JvmStatic
+    var cache: Int = 0
+        private set
 
     const val FOREGROUND_BLUE = 0x1
     const val FOREGROUND_GREEN = 0x2
@@ -82,12 +83,13 @@ object ConsolePrinter {
      * @param path DLL 文件的路径
      */
     @JvmStatic
-    fun init(width: Int, height: Int, fontWidth: Int, cache: Int = 2, path: File = File("./libs/utils.dll")) {
+    fun init(width: Int, height: Int, fontWidth: Int, cache: Int = 2, ignoreClose: Boolean, path: File = File("./libs/utils.dll")) {
         require(cache > 0) { "缓存数量[$cache]应当大于 0" }
         System.load(path.absolutePath)
         this.width = width
         this.height = height
-        initN(width, height, fontWidth, cache)
+        this.cache = cache
+        initN(width, height, fontWidth, cache, ignoreClose)
     }
 
     /** 快速清空全图的字符 */
@@ -137,13 +139,18 @@ object ConsolePrinter {
     }
 
     @JvmStatic
+    fun dispose() {
+        disposeN(cache)
+    }
+
+    @JvmStatic
     fun getCharWidth(char: Char): Int =
         if (char.code < 0x100) 1 else 2
 
     // ---------- native function ----------//
 
     @JvmStatic
-    private external fun initN(width: Int, height: Int, fontWidth: Int, cache: Int)
+    private external fun initN(width: Int, height: Int, fontWidth: Int, cache: Int, ignoreClose: Boolean)
 
     /**
      * 刷新控制台显示，将指定下标的缓存设置为活动缓存。
@@ -152,6 +159,10 @@ object ConsolePrinter {
      */
     @JvmStatic
     external fun flush(index: Int = this.index)
+
+    /** 销毁控制台 */
+    @JvmStatic
+    private external fun disposeN(cache: Int)
 
     /** 快速填充字符，若填充宽度超过当前行款，会跨行填充而非截止 */
     @JvmStatic
