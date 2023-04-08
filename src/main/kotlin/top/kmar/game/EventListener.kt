@@ -132,8 +132,13 @@ object EventListener {
     const val KEY_RIGHT = 39
 
     @JvmStatic
-    val keys = BooleanArray(223)
+    private val keys = BooleanArray(223)
 
+    /** 判断指定按键是否被按下 */
+    @JvmStatic
+    fun isPressed(code: Int) = keys[code]
+
+    /** 更新键盘输入 */
     @JvmStatic
     fun checkKeyboardInput() = checkKeyboardInput(keys)
 
