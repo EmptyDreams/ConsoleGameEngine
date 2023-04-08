@@ -1,14 +1,18 @@
-#include "top_kmar_game_ConsoleUtils.h"
+#include "top_kmar_game_ConsolePrinter.h"
 
 #include <windows.h>
 #include <stdbool.h>
 #include <wchar.h>
+#include <handleapi.h>
 
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "OCUnusedGlobalDeclarationInspection"
 #pragma clang diagnostic ignored "-Wc2x-extensions"
 
 static HANDLE* buffers = NULL;
+static LONG srcStyle = -1;
+HANDLE stdInput;
+static DWORD stdInputMode = 0;
 
 // 判断指定位置是否为占用两格宽的字符
 static bool isWideChar(HANDLE buffer, jint x, jint y) {
@@ -76,11 +80,16 @@ static HANDLE createHandle(jint width, jint height, jint fontWidth, HWND console
     return result;
 }
 
+BOOL WINAPI CtrlHandler(DWORD _) {
+    return true;
+}
+
 JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_initN
-        (JNIEnv*, jclass, jint width, jint height, jint fontWidth, jint cache) {
+        (JNIEnv*, jclass, jint width, jint height, jint fontWidth, jint cache, jboolean ignoreClose) {
     HWND consoleWindow = GetConsoleWindow();
     SetConsoleOutputCP(CP_UTF8);
     LONG style = GetWindowLong(consoleWindow, GWL_STYLE);
+    srcStyle = style;
     style &= ~WS_MAXIMIZEBOX & ~WS_SIZEBOX;     // 禁止修改窗体大小
     style &= ~(ENABLE_WRAP_AT_EOL_OUTPUT | ENABLE_MOUSE_INPUT | DISABLE_NEWLINE_AUTO_RETURN);
     style &= ~(ENABLE_QUICK_EDIT_MODE | ENABLE_MOUSE_INPUT);
@@ -89,6 +98,13 @@ JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_initN
     for (int i = 0; i != cache; ++i) {
         buffers[i] = createHandle(width, height, fontWidth, consoleWindow);
     }
+    stdInput = GetStdHandle(STD_INPUT_HANDLE);
+    DWORD mode = 0;
+    GetConsoleMode(stdInput, &mode);
+    stdInputMode = mode;
+    SetConsoleMode(stdInput, mode & ~(ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT));
+    if (ignoreClose)
+        SetConsoleCtrlHandler(CtrlHandler, TRUE);
 }
 
 JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_flush
@@ -101,6 +117,22 @@ JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_flush
     SetConsoleCursorInfo(buffer, &cci);
     // 修改 active
     SetConsoleActiveScreenBuffer(buffer);
+}
+
+JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_disposeN
+        (JNIEnv *, jclass, jint size) {
+    HANDLE buffer = GetStdHandle(STD_OUTPUT_HANDLE);
+    HWND consoleWindow = GetConsoleWindow();
+    SetWindowLong(consoleWindow, GWL_STYLE, srcStyle);
+    SetConsoleActiveScreenBuffer(buffer);
+    for (int i = 0; i != size; ++i) {
+        CloseHandle(buffers[i]);
+    }
+    free(buffers);
+    buffers = NULL;
+    SetConsoleMode(stdInput, stdInputMode);
+    stdInput = NULL;
+    SetConsoleCtrlHandler(CtrlHandler, FALSE);
 }
 
 JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_quickFillChar
