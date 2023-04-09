@@ -13,10 +13,10 @@ import java.util.stream.Stream
  *
  * @author 空梦
  */
-class GMap(val width: Int, val height: Int, fontWidth: Int, cache: Int, file: File = File("./libs/utils.dll")) {
+class GMap(val width: Int, val height: Int, fontWidth: Int, cache: Int, ignoreClose: Boolean, file: File = File("./libs/utils.dll")) {
 
     init {
-        ConsolePrinter.init(width, height, fontWidth, cache, file)
+        ConsolePrinter.init(width, height, fontWidth, cache, ignoreClose, file)
     }
 
     private val entities = Int2ObjectRBTreeMap<MutableSet<GEntity>>()
