@@ -7,12 +7,11 @@
 extern HANDLE stdInput;
 
 JNIEXPORT jint JNICALL Java_top_kmar_game_EventListener_checkKeyboardInput(
-        JNIEnv * env, jclass class, jbooleanArray boolArray
+        JNIEnv * env, jclass, jbooleanArray boolArray
 ) {
     jboolean* array = (*env)->GetBooleanArrayElements(env, boolArray, FALSE);
     for (int i = 8; i != 223; ++i) {
-        short it = GetAsyncKeyState(i);
-        array[i] = it != 0;
+        array[i] = GetAsyncKeyState(i) != 0;
     }
     (*env)->ReleaseBooleanArrayElements(env, boolArray, array, 0);
 }
