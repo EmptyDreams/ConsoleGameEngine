@@ -1,5 +1,8 @@
 package top.kmar.game
 
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
+import top.kmar.game.listener.IKeyboardListener
+
 /**
  * 事件监听器
  */
@@ -132,15 +135,47 @@ object EventListener {
     const val KEY_RIGHT = 39
 
     @JvmStatic
-    private val keys = BooleanArray(223)
+    private var keys = BooleanArray(223)
+    @JvmStatic
+    private var oldKeys = BooleanArray(233)     // 存储上一次的 key 值表
+    @JvmStatic
+    private val regeditList = ObjectOpenHashSet<IKeyboardListener>()
+
+    /** 注册一个键盘事件 */
+    @JvmStatic
+    fun registryKeyboardEvent(listener: IKeyboardListener) {
+        regeditList.add(listener)
+    }
+
+    /** 删除一个事件 */
+    @JvmStatic
+    fun removeKeyboardEvent(listener: IKeyboardListener) {
+        regeditList.remove(listener)
+    }
 
     /** 判断指定按键是否被按下 */
     @JvmStatic
     fun isPressed(code: Int) = keys[code]
 
-    /** 更新键盘输入 */
+    /** 更新键盘输入并触发键盘事件 */
     @JvmStatic
-    fun checkKeyboardInput() = checkKeyboardInput(keys)
+    fun pushKeyboardEvent() {
+        keys = oldKeys.apply { oldKeys = keys }
+        checkKeyboardInput(keys)
+        for ((index, value) in keys.withIndex()) {
+            if (value) {
+                if (oldKeys[index]) regeditList.forEach { it.onActive(index) }
+                else {
+                    regeditList.forEach {
+                        it.onPressed(index)
+                        it.onActive(index)
+                    }
+                }
+            } else if (oldKeys[index]) {
+                regeditList.forEach { it.onReleased(index) }
+            }
+        }
+    }
 
     /** 获取按下的按键列表 */
     @JvmStatic
