@@ -135,7 +135,7 @@ object EventListener {
     const val KEY_RIGHT = 39
 
     @JvmStatic
-    private var keys = BooleanArray(223)
+    private var keys = BooleanArray(233)
     @JvmStatic
     private var oldKeys = BooleanArray(233)     // 存储上一次的 key 值表
     @JvmStatic
