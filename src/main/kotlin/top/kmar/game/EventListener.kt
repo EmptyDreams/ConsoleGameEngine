@@ -1,7 +1,9 @@
 package top.kmar.game
 
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
+import top.kmar.game.listener.IKeyMouseListener
 import top.kmar.game.listener.IKeyboardListener
+import top.kmar.game.listener.IMouseListener
+import java.util.*
 
 /**
  * 事件监听器
@@ -153,41 +155,60 @@ object EventListener {
     @JvmStatic
     private var oldKeys = BooleanArray(233)     // 存储上一次的 key 值表
     @JvmStatic
-    private val regeditList = ObjectOpenHashSet<IKeyboardListener>()
+    private val keyboardListeners = LinkedList<IKeyboardListener>()
+    @JvmStatic
+    private val mouseListeners = LinkedList<IMouseListener>()
 
     /** 注册一个键盘事件 */
     @JvmStatic
     fun registryKeyboardEvent(listener: IKeyboardListener) {
-        regeditList.add(listener)
+        keyboardListeners.add(listener)
     }
 
-    /** 删除一个事件 */
+    /** 注册一个鼠标事件 */
+    @JvmStatic
+    fun registryMouseEvent(listener: IMouseListener) {
+        mouseListeners.add(listener)
+    }
+
+    /** 删除一个键盘事件 */
     @JvmStatic
     fun removeKeyboardEvent(listener: IKeyboardListener) {
-        regeditList.remove(listener)
+        keyboardListeners.remove(listener)
+    }
+
+    /** 删除一个鼠标事件 */
+    fun removeMouseEvent(listener: IMouseListener) {
+        mouseListeners.remove(listener)
     }
 
     /** 判断指定按键是否被按下 */
     @JvmStatic
     fun isPressed(code: Int) = keys[code]
 
-    /** 更新键盘输入并触发键盘事件 */
+    /** 更新键盘和鼠标的输入并触发事件 */
     @JvmStatic
-    fun pushKeyboardEvent() {
+    fun pushEvent() {
         keys = oldKeys.apply { oldKeys = keys }
         checkKeyboardInput(keys)
-        for ((index, value) in keys.withIndex()) {
-            if (value) {
-                if (oldKeys[index]) regeditList.forEach { it.onActive(index) }
+        fun compare(list: List<IKeyMouseListener>, index: Int) {
+            if (keys[index]) {
+                if (oldKeys[index]) list.forEach { it.onActive(index) }
                 else {
-                    regeditList.forEach {
+                    list.forEach {
                         it.onPressed(index)
                         it.onActive(index)
                     }
                 }
             } else if (oldKeys[index]) {
-                regeditList.forEach { it.onReleased(index) }
+                list.forEach { it.onReleased(index) }
             }
+        }
+        for (i in 1 until 7) {
+            compare(mouseListeners, i)
+        }
+        for (i in 8 until keys.size) {
+            compare(keyboardListeners, i)
         }
     }
 

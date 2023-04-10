@@ -118,7 +118,7 @@ class GMap(
         val timer = Timer("Event Listener Thread", true)
         timer.scheduleAtFixedRate(object : TimerTask() {
             override fun run() {
-                EventListener.pushKeyboardEvent()
+                EventListener.pushEvent()
             }
         }, eventInterval, eventInterval)
         Thread.currentThread().name = "Logic Thread"
