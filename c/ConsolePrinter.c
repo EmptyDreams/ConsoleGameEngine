@@ -90,9 +90,8 @@ JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_initN
     SetConsoleOutputCP(CP_UTF8);
     LONG style = GetWindowLong(consoleWindow, GWL_STYLE);
     srcStyle = style;
-    style &= ~WS_MAXIMIZEBOX & ~WS_SIZEBOX;     // 禁止修改窗体大小
-    style &= ~(ENABLE_WRAP_AT_EOL_OUTPUT | ENABLE_MOUSE_INPUT | DISABLE_NEWLINE_AUTO_RETURN);
-    style &= ~(ENABLE_QUICK_EDIT_MODE | ENABLE_MOUSE_INPUT);
+    style = WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_VISIBLE;
+    style &= ~(ENABLE_QUICK_EDIT_MODE | ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
     SetWindowLong(consoleWindow, GWL_STYLE, style);
     buffers = malloc(sizeof(HANDLE) * cache);
     for (int i = 0; i != cache; ++i) {
@@ -102,7 +101,7 @@ JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_initN
     DWORD mode = 0;
     GetConsoleMode(stdInput, &mode);
     stdInputMode = mode;
-    SetConsoleMode(stdInput, mode & ~(ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT));
+    SetConsoleMode(stdInput, mode & ~ENABLE_QUICK_EDIT_MODE);
     if (ignoreClose)
         SetConsoleCtrlHandler(CtrlHandler, TRUE);
 }

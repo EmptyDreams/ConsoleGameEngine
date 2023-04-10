@@ -10,7 +10,7 @@ JNIEXPORT jint JNICALL Java_top_kmar_game_EventListener_checkKeyboardInput(
         JNIEnv * env, jclass, jbooleanArray boolArray
 ) {
     jboolean* array = (*env)->GetBooleanArrayElements(env, boolArray, FALSE);
-    for (int i = 8; i != 223; ++i) {
+    for (int i = 1; i != 223; ++i) {
         array[i] = GetAsyncKeyState(i) != 0;
     }
     (*env)->ReleaseBooleanArrayElements(env, boolArray, array, 0);
