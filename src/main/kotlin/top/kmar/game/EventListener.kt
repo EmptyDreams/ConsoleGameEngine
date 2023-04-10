@@ -141,6 +141,13 @@ object EventListener {
     const val KEY_LEFT = 37
     const val KEY_RIGHT = 39
 
+    // 鼠标
+    const val MOUSE_LEFT = 1
+    const val MOUSE_RIGHT = 2
+    const val MOUSE_CENTER = 4
+    const val MOUSE_DOWN = 5
+    const val MOUSE_UP = 6
+
     @JvmStatic
     private var keys = BooleanArray(233)
     @JvmStatic
