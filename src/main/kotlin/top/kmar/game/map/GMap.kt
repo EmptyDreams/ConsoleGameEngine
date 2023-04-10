@@ -175,4 +175,14 @@ class GMap(
         }
     }
 
+    /** 销毁控制台 */
+    fun dispose() {
+        ConsolePrinter.dispose()
+    }
+
+    fun finalize() {
+        println("1")
+        dispose()
+    }
+
 }
