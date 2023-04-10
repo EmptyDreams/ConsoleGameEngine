@@ -63,8 +63,14 @@ interface GEntity {
     fun hasIntersect(that: GEntity): Boolean =
         x >= that.x && y >= that.y && right <= that.right && bottom <= that.bottom
 
+    /**
+     * 更新实体状态
+     * @param time 距离上一次执行间隔的时间（ms）
+     */
+    fun update(map: GMap, time: Long)
+
     /** 使该实体被指定实体杀死 */
-    fun beKilled(killer: GEntity)
+    fun beKilled(map: GMap, killer: GEntity)
 
     /** 在发生与其它实体的碰撞时触发 */
     fun onCollision(map: GMap, that: GEntity)
