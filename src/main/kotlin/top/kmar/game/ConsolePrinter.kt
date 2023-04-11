@@ -34,6 +34,7 @@ import java.io.File
  *      　　计算字符宽度时，满足 `char < 0x100` 的宽度视为 1，否则为 2.
  * @author 空梦
  */
+@Suppress("MemberVisibilityCanBePrivate", "unused")
 object ConsolePrinter {
 
     @JvmStatic

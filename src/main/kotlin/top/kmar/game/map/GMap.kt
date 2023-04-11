@@ -21,6 +21,7 @@ import java.util.stream.Stream
  *
  * @author 空梦
  */
+@Suppress("MemberVisibilityCanBePrivate", "unused")
 class GMap private constructor(
     /** 横向字符数量 */
     val width: Int,
@@ -30,7 +31,7 @@ class GMap private constructor(
 
     private val entities = Int2ObjectRBTreeMap<MutableSet<GEntity>>()
     private val closed = AtomicBoolean(false)
-    private val stoped = AtomicBoolean(false)
+    private val stopped = AtomicBoolean(false)
 
     /** 所有实体 */
     val allEntity: Stream<GEntity>
@@ -147,7 +148,7 @@ class GMap private constructor(
             invokeThreadTask()
             update(time)
             render()
-            if (stoped.get() || !logicCondition.asBoolean) {
+            if (stopped.get() || !logicCondition.asBoolean) {
                 timer.cancel()
                 break
             }
@@ -162,7 +163,7 @@ class GMap private constructor(
      */
     fun stop() {
         require(prev.get() != 0L) { "任务未启动" }
-        stoped.set(true)
+        stopped.set(true)
     }
 
     /**

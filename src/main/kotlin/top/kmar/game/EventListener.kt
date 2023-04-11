@@ -8,6 +8,7 @@ import java.util.*
 /**
  * 事件监听器
  */
+@Suppress("unused", "MemberVisibilityCanBePrivate")
 object EventListener {
 
     // 字母键

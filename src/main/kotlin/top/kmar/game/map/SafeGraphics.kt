@@ -9,6 +9,7 @@ import kotlin.math.min
  * 画笔
  * @author 空梦
  */
+@Suppress("MemberVisibilityCanBePrivate", "unused")
 class SafeGraphics internal constructor(
     /** 画笔在画布中的 X 轴坐标 */
     val x: Int,
@@ -206,7 +207,7 @@ class SafeGraphics internal constructor(
         )
     }
 
-    @Suppress("unused", "FunctionName")
+    @Suppress("FunctionName")
     companion object {
 
         @JvmStatic
@@ -249,6 +250,7 @@ fun SafeGraphics(map: GMap, x: Int, y: Int, width: Int, height: Int, index: Int 
     return SafeGraphics(x, y, right - left, bottom - top, index)
 }
 
+@Suppress("FunctionName")
 @JvmName("_ do not use")
 fun HalfSafeGraphics(x: Int, y: Int, width: Int, height: Int, index: Int): SafeGraphics =
     SafeGraphics(x, y, width, height, index)

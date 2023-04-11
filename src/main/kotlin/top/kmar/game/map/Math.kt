@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package top.kmar.game.map
 
 /** 用于表示一个矩形区域 */

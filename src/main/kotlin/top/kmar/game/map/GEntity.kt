@@ -4,6 +4,7 @@ package top.kmar.game.map
  * 游戏实体，出现在游戏内的任何元素都应从该接口派生
  * @author 空梦
  */
+@Suppress("unused")
 interface GEntity {
 
     /** 实体是否可见 */
