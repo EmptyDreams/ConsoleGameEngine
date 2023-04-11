@@ -109,20 +109,14 @@ class GMap private constructor(
      * 1. [invokeThreadTask]
      * 2. [update]
      * 3. [render]
+     * 4. [logicCondition]
      *
      * @param eventInterval 事件监听的时间间隔
      * @param logicInterval 逻辑执行的时间间隔
      * @param logicCondition 判断是否继续执行程序，返回 false 后会终止所有任务并退出当前函数
      */
     fun start(eventInterval: Long, logicInterval: Long, logicCondition: BooleanSupplier) {
-        require(!closed.get()) { "当前 GMap 已经被关闭，无法执行动作" }
-        if (prev.get() != 0L) throw AssertionError("不应该重复启动时序控制")
-        val timer = Timer("Event Listener Thread", true)
-        timer.scheduleAtFixedRate(object : TimerTask() {
-            override fun run() {
-                EventListener.pushEvent()
-            }
-        }, eventInterval, eventInterval)
+        val timer = startEventThread(eventInterval)
         Thread.currentThread().name = "Logic Thread"
         prev.set(System.currentTimeMillis())
         var offset = 0L     // 偏移量，用于修复等待时间不正确时的情况
@@ -154,6 +148,44 @@ class GMap private constructor(
             }
         }
         prev.set(0L)
+    }
+
+    /**
+     * 让引擎接管所有时序控制。
+     *
+     * 与 [start] 不同的是，该函数执行逻辑线程时不会进行等待，一次循环结束后会马上开始第二次循环。
+     *
+     * 内部逻辑与 [start] 相同。
+     */
+    fun start(eventInterval: Long, logicCondition: BooleanSupplier) {
+        val timer = startEventThread(eventInterval)
+        Thread.currentThread().name = "Logic Thread"
+        prev.set(System.currentTimeMillis())
+        while (true) {
+            val now = System.currentTimeMillis()
+            val time = now - prev.get()
+            prev.set(now)
+            invokeThreadTask()
+            update(time)
+            render()
+            if (stopped.get() || !logicCondition.asBoolean) {
+                timer.cancel()
+                break
+            }
+        }
+        prev.set(0L)
+    }
+
+    private fun startEventThread(eventInterval: Long): Timer {
+        require(!closed.get()) { "当前 GMap 已经被关闭，无法执行动作" }
+        if (prev.get() != 0L) throw AssertionError("不应该重复启动时序控制")
+        val timer = Timer("Event Listener Thread", true)
+        timer.scheduleAtFixedRate(object : TimerTask() {
+            override fun run() {
+                EventListener.pushEvent()
+            }
+        }, eventInterval, eventInterval)
+        return timer
     }
 
     /**
