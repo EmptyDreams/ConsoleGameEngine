@@ -4,9 +4,12 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectRBTreeMap
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import top.kmar.game.ConsolePrinter
 import top.kmar.game.EventListener
+import java.io.Closeable
 import java.io.File
+import java.lang.ref.WeakReference
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.function.BooleanSupplier
 import java.util.stream.Stream
 
@@ -17,26 +20,15 @@ import java.util.stream.Stream
  *
  * @author 空梦
  */
-class GMap(
+class GMap private constructor(
     /** 横向字符数量 */
     val width: Int,
     /** 纵向字符数量 */
-    val height: Int,
-    /** 字符宽度（宽高比为 1:2） */
-    fontWidth: Int,
-    /** 缓存数量 */
-    cache: Int,
-    /** 是否忽略 ctrl + C 等快捷键 */
-    ignoreClose: Boolean,
-    /** DLL 文件路径 */
-    file: File = File("utils.dll")
-) {
-
-    init {
-        ConsolePrinter.init(width, height, fontWidth, cache, ignoreClose, file)
-    }
+    val height: Int
+) : Closeable {
 
     private val entities = Int2ObjectRBTreeMap<MutableSet<GEntity>>()
+    private val closed = AtomicBoolean(false)
 
     /** 所有实体 */
     val allEntity: Stream<GEntity>
@@ -57,6 +49,7 @@ class GMap(
 
     /** 放置一个实体 */
     fun putEntity(entity: GEntity, layout: Int) {
+        require(!closed.get()) { "当前 GMap 已经被关闭，无法执行动作" }
         val list = entities.getOrPut(layout) { ObjectOpenHashSet(width * height) }
         list.add(entity)
         entity.onGenerate(this)
@@ -69,6 +62,7 @@ class GMap(
 
     /** 渲染所有实体 */
     fun render() {
+        require(!closed.get()) { "当前 GMap 已经被关闭，无法执行动作" }
         visibleEntity.forEach {
             val graphics = SafeGraphics(this, it.x, it.y, it.width, it.height, ConsolePrinter.index)
             it.render(graphics)
@@ -86,17 +80,21 @@ class GMap(
      * @param task 要执行的任务，返回值用于标明是否移除任务，返回 true 会在执行任务后将任务移除，否则下一次逻辑循环将再一次执行该任务
      */
     fun runTaskOnLogicThread(task: BooleanSupplier) {
+        require(!closed.get()) { "当前 GMap 已经被关闭，无法执行动作" }
         taskList.add(task)
     }
 
     /** 执行使用 [runTaskOnLogicThread] 添加的任务 */
     fun invokeThreadTask() {
+        require(!closed.get()) { "当前 GMap 已经被关闭，无法执行动作" }
         val itor = taskList.iterator()
         while (itor.hasNext()) {
             val item = itor.next()
             if (item.asBoolean) itor.remove()
         }
     }
+
+    private var prev = 0L
 
     /**
      * 让引擎接管所有时序控制。
@@ -114,6 +112,7 @@ class GMap(
      * @param logicCondition 判断是否继续执行程序，返回 false 后会终止所有任务并退出当前函数
      */
     fun start(eventInterval: Long, logicInterval: Long, logicCondition: BooleanSupplier) {
+        require(!closed.get()) { "当前 GMap 已经被关闭，无法执行动作" }
         if (prev != 0L) throw AssertionError("不应该重复启动时序控制")
         val timer = Timer("Event Listener Thread", true)
         timer.scheduleAtFixedRate(object : TimerTask() {
@@ -150,9 +149,8 @@ class GMap(
                 break
             }
         }
+        prev = 0
     }
-
-    private var prev = 0L
 
     /**
      * 更新地图中的信息。
@@ -162,6 +160,7 @@ class GMap(
      * @param time 距离上一次执行的时间间隔（ms）
      */
     fun update(time: Long) {
+        require(!closed.get()) { "当前 GMap 已经被关闭，无法执行动作" }
         allEntity.forEach { it.update(this, time) }
         entities.values.forEach { list ->
             val itor = list.iterator()
@@ -175,14 +174,100 @@ class GMap(
         }
     }
 
-    /** 销毁控制台 */
-    fun dispose() {
-        ConsolePrinter.dispose()
+    /** 关闭当前 map */
+    override fun close() {
+        require(prev == 0L) { "GMap 的逻辑正在进行，无法关闭" }
+        closed.set(true)
+        Builder.list.removeIf { it.get() == this }
     }
 
-    fun finalize() {
-        println("1")
-        dispose()
+    object Builder {
+
+        /** 横向格数 */
+        @JvmStatic
+        var width: Int = -1
+            set(value) {
+                require(field == -1) { "不能重复初始化属性" }
+                require(value > 0) { "宽度应该大于 0" }
+                field = value
+            }
+        /** 纵向格数 */
+        @JvmStatic
+        var height: Int = -1
+            set(value) {
+                require(field == -1) { "不能重复初始化属性" }
+                require(value > 0) { "高度应该大于 0" }
+                field = value
+            }
+        /** 字体宽度 */
+        @JvmStatic
+        var fontWidth: Int = -1
+            set(value) {
+                require(field == -1) { "不能重复初始化属性" }
+                require(value > 0) { "宽度应该大于 0" }
+                field = value
+            }
+        /** 缓存数量 */
+        @JvmStatic
+        var cache: Int = -1
+            set(value) {
+                require(field == -1) { "不能重复初始化属性" }
+                require(value > 0) { "缓存数量应该大于 0" }
+                field = value
+            }
+        /** 是否忽略控制键 */
+        @JvmStatic
+        var ignoreClose: Boolean? = null
+            set(value) {
+                require(field == null) { "不能重复初始化属性" }
+                require(field != null) { "值不应当为 NULL" }
+                field = value
+            }
+        /** DLL 路径 */
+        @JvmStatic
+        var file: File? = null
+            set(value) {
+                require(field == null) { "不能重复初始化属性" }
+                require(field != null) { "值不应当为 NULL" }
+                field = value
+            }
+
+        @JvmStatic
+        private var flag = true
+        @JvmStatic
+        internal val list = LinkedList<WeakReference<GMap>>()
+
+        @JvmStatic
+        fun build(): GMap {
+            require(width != -1) { "宽度属性未初始化" }
+            require(height != -1) { "高度属性未初始化" }
+            if (fontWidth == -1) fontWidth = 6
+            if (cache == -10) cache = 2
+            if (ignoreClose == null) ignoreClose = false
+            if (file == null) file = File("utils.dll")
+            if (flag) {
+                flag = false
+                ConsolePrinter.init(width, height, fontWidth, cache, ignoreClose!!, file!!)
+            }
+            list.removeIf { it.get() == null }
+            val map = GMap(width, height)
+            list.add(WeakReference(map))
+            return map
+        }
+
+        /**
+         * 销毁控制台，只有当所有 map 都被虚拟机回收或 close 后可以进行销毁
+         * @return 是否销毁成功
+         */
+        @JvmStatic
+        fun dispose(): Boolean {
+            list.removeIf { it.get() == null }
+            return if (list.isEmpty()) {
+                ConsolePrinter.dispose()
+                true
+            } else false
+        }
+
     }
 
 }

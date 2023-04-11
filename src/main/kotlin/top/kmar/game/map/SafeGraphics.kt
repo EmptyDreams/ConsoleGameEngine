@@ -209,6 +209,10 @@ class SafeGraphics internal constructor(
 }
 
 @JvmName("createSafeGraphics")
+fun SafeGraphics(map: GMap, index: Int = ConsolePrinter.index): SafeGraphics =
+    SafeGraphics(0, 0, map.width, map.height, index)
+
+@JvmName("createSafeGraphics")
 fun SafeGraphics(map: GMap, x: Int, y: Int, width: Int, height: Int, index: Int = ConsolePrinter.index): SafeGraphics {
     val left = x.coerceAtLeast(0)
     val top = y.coerceAtLeast(0)
