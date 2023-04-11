@@ -278,7 +278,14 @@ class GMap private constructor(
             return if (list.isEmpty()) {
                 ConsolePrinter.dispose()
                 true
-            } else false
+            } else {
+                System.gc()
+                list.removeIf { it.get() == null }
+                if (list.isEmpty()) {
+                    ConsolePrinter.dispose()
+                    true
+                } else false
+            }
         }
 
     }
