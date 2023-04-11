@@ -6,7 +6,7 @@
 
 extern HANDLE stdInput;
 
-JNIEXPORT jint JNICALL Java_top_kmar_game_EventListener_checkKeyboardInput(
+JNIEXPORT jint JNICALL Java_top_kmar_game_EventListener_getKeyMouseInput(
         JNIEnv * env, jclass, jbooleanArray boolArray
 ) {
     jboolean* array = (*env)->GetBooleanArrayElements(env, boolArray, FALSE);
