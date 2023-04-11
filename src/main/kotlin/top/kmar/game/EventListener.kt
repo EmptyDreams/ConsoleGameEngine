@@ -155,6 +155,7 @@ object EventListener {
     private var keys = BooleanArray(233)
     @JvmStatic
     private var oldKeys = BooleanArray(233)     // 存储上一次的 key 值表
+    var mousePos = IntArray(2)
     @JvmStatic
     private val keyboardListeners = LinkedList<IKeyboardListener>()
     @JvmStatic
@@ -191,7 +192,8 @@ object EventListener {
     @JvmStatic
     fun pushEvent() {
         keys = oldKeys.apply { oldKeys = keys }
-        checkKeyboardInput(keys)
+        getKeyMouseInput(keys)
+        getMouseLocation(mousePos)
         fun compare(list: List<IKeyMouseListener>, index: Int) {
             if (keys[index]) {
                 if (oldKeys[index]) list.forEach { it.onActive(index) }
@@ -215,6 +217,10 @@ object EventListener {
 
     /** 获取按下的按键列表 */
     @JvmStatic
-    private external fun checkKeyboardInput(array: BooleanArray)
+    private external fun getKeyMouseInput(array: BooleanArray)
+
+    /** 获取鼠标坐标 */
+    @JvmStatic
+    private external fun getMouseLocation(array: IntArray)
 
 }
