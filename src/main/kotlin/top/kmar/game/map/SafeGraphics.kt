@@ -206,13 +206,41 @@ class SafeGraphics internal constructor(
         )
     }
 
+    @Suppress("unused", "FunctionName")
+    companion object {
+
+        @JvmStatic
+        @JvmName("createSafeGraphics")
+        internal fun _createSafeGraphics(map: GMap, index: Int) = SafeGraphics(map, index)
+
+        @JvmStatic
+        @JvmName("createSafeGraphics")
+        internal fun _createSafeGraphics(map: GMap) = SafeGraphics(map)
+
+        @JvmStatic
+        @JvmName("createSafeGraphics")
+        internal fun _createSafeGraphics(map: GMap, x: Int, y: Int, width: Int, height: Int, index: Int) =
+            SafeGraphics(map, x, y, width, height, index)
+
+        @JvmStatic
+        @JvmName("createSafeGraphics")
+        internal fun _createSafeGraphics(map: GMap, x: Int, y: Int, width: Int, height: Int) =
+            SafeGraphics(map, x, y, width, height)
+
+        @JvmStatic
+        @JvmName("createHalfSafeGraphics")
+        internal fun _createHalfSafeGraphics(x: Int, y: Int, width: Int, height: Int, index: Int) =
+            HalfSafeGraphics(x, y, width, height, index)
+
+    }
+
 }
 
-@JvmName("createSafeGraphics")
+@JvmName("_ do not use")
 fun SafeGraphics(map: GMap, index: Int = ConsolePrinter.index): SafeGraphics =
     SafeGraphics(0, 0, map.width, map.height, index)
 
-@JvmName("createSafeGraphics")
+@JvmName("_ do not use")
 fun SafeGraphics(map: GMap, x: Int, y: Int, width: Int, height: Int, index: Int = ConsolePrinter.index): SafeGraphics {
     val left = x.coerceAtLeast(0)
     val top = y.coerceAtLeast(0)
@@ -221,6 +249,6 @@ fun SafeGraphics(map: GMap, x: Int, y: Int, width: Int, height: Int, index: Int 
     return SafeGraphics(x, y, right - left, bottom - top, index)
 }
 
-@JvmName("createHalfSafeGraphics")
+@JvmName("_ do not use")
 fun HalfSafeGraphics(x: Int, y: Int, width: Int, height: Int, index: Int): SafeGraphics =
     SafeGraphics(x, y, width, height, index)

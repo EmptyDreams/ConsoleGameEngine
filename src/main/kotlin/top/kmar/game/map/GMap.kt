@@ -202,6 +202,9 @@ class GMap private constructor(
         }
     }
 
+    /**
+     * [GMap] 的构造器
+     */
     object Builder {
 
         /** 横向格数 */
@@ -295,6 +298,48 @@ class GMap private constructor(
                 } else false
             }
         }
+
+    }
+
+    /**
+     * [Builder] 的 Java 优化版本
+     */
+    internal object BuilderJava {
+
+        fun setWidth(value: Int): BuilderJava {
+            Builder.width = value
+            return this
+        }
+
+        fun setHeight(value: Int): BuilderJava {
+            Builder.height = value
+            return this
+        }
+
+        fun setCache(value: Int): BuilderJava {
+            Builder.cache = value
+            return this
+        }
+
+        fun setFontWidth(value: Int): BuilderJava {
+            Builder.fontWidth = value
+            return this
+        }
+
+        fun setIgnoreClose(value: Boolean): BuilderJava {
+            Builder.ignoreClose = value
+            return this
+        }
+
+        fun setFile(file: File): BuilderJava {
+            Builder.file = file
+            return this
+        }
+
+        fun build(): GMap = Builder.build()
+
+        @JvmStatic
+        fun dispose() = Builder.dispose()
 
     }
 
