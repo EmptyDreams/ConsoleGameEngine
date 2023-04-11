@@ -298,7 +298,7 @@ class GMap private constructor(
         fun build(): GMap {
             require(width != -1) { "宽度属性未初始化" }
             require(height != -1) { "高度属性未初始化" }
-            if (fontWidth == -1) fontWidth = 6
+            if (fontWidth == -1) fontWidth = 10
             if (cache == -10) cache = 2
             if (ignoreClose == null) ignoreClose = false
             if (file == null) file = File("utils.dll")
