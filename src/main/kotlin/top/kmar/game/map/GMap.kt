@@ -277,7 +277,7 @@ class GMap private constructor(
         var ignoreClose: Boolean? = null
             set(value) {
                 require(field == null) { "不能重复初始化属性" }
-                require(field != null) { "值不应当为 NULL" }
+                require(value != null) { "值不应当为 NULL" }
                 field = value
             }
         /** DLL 路径 */
@@ -285,7 +285,7 @@ class GMap private constructor(
         var file: File? = null
             set(value) {
                 require(field == null) { "不能重复初始化属性" }
-                require(field != null) { "值不应当为 NULL" }
+                require(value != null) { "值不应当为 NULL" }
                 field = value
             }
 
