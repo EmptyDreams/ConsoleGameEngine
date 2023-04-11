@@ -191,7 +191,15 @@ class GMap private constructor(
     override fun close() {
         require(prev.get() == 0L) { "GMap 的逻辑正在进行，无法关闭" }
         closed.set(true)
-        Builder.list.removeIf { it.get() == this }
+        val itor = Builder.list.iterator()
+        while (itor.hasNext()) {
+            val item = itor.next().get()
+            if (item == null) itor.remove()
+            else if (item == this) {
+                itor.remove()
+                break
+            }
+        }
     }
 
     object Builder {
