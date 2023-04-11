@@ -10,6 +10,7 @@ import java.lang.ref.WeakReference
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 import java.util.function.BooleanSupplier
 import java.util.stream.Stream
 
@@ -29,6 +30,7 @@ class GMap private constructor(
 
     private val entities = Int2ObjectRBTreeMap<MutableSet<GEntity>>()
     private val closed = AtomicBoolean(false)
+    private val stoped = AtomicBoolean(false)
 
     /** 所有实体 */
     val allEntity: Stream<GEntity>
@@ -94,7 +96,7 @@ class GMap private constructor(
         }
     }
 
-    private var prev = 0L
+    private var prev = AtomicLong(0L)
 
     /**
      * 让引擎接管所有时序控制。
@@ -113,7 +115,7 @@ class GMap private constructor(
      */
     fun start(eventInterval: Long, logicInterval: Long, logicCondition: BooleanSupplier) {
         require(!closed.get()) { "当前 GMap 已经被关闭，无法执行动作" }
-        if (prev != 0L) throw AssertionError("不应该重复启动时序控制")
+        if (prev.get() != 0L) throw AssertionError("不应该重复启动时序控制")
         val timer = Timer("Event Listener Thread", true)
         timer.scheduleAtFixedRate(object : TimerTask() {
             override fun run() {
@@ -121,10 +123,11 @@ class GMap private constructor(
             }
         }, eventInterval, eventInterval)
         Thread.currentThread().name = "Logic Thread"
-        prev = System.currentTimeMillis()
+        prev.set(System.currentTimeMillis())
         var offset = 0L     // 偏移量，用于修复等待时间不正确时的情况
         val sleepBound = logicInterval - 2
         while (true) {
+            val prev = prev.get()
             var now = System.currentTimeMillis()
             var time = now - prev + offset
             // sleep 等待
@@ -140,16 +143,26 @@ class GMap private constructor(
             }
             time = now - prev
             offset += time - logicInterval
-            prev = now
+            this.prev.set(now)
             invokeThreadTask()
             update(time)
             render()
-            if (!logicCondition.asBoolean) {
+            if (stoped.get() || !logicCondition.asBoolean) {
                 timer.cancel()
                 break
             }
         }
-        prev = 0
+        prev.set(0L)
+    }
+
+    /**
+     * 终止通过 [start] 启动的所有任务
+     *
+     * 该函数是线程安全的。
+     */
+    fun stop() {
+        require(prev.get() != 0L) { "任务未启动" }
+        stoped.set(true)
     }
 
     /**
@@ -176,7 +189,7 @@ class GMap private constructor(
 
     /** 关闭当前 map */
     override fun close() {
-        require(prev == 0L) { "GMap 的逻辑正在进行，无法关闭" }
+        require(prev.get() == 0L) { "GMap 的逻辑正在进行，无法关闭" }
         closed.set(true)
         Builder.list.removeIf { it.get() == this }
     }
