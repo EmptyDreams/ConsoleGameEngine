@@ -71,16 +71,16 @@ interface GEntity {
     fun update(map: GMap, time: Long)
 
     /** 使该实体被指定实体杀死 */
-    fun beKilled(map: GMap, killer: GEntity)
+    fun beKilled(map: GMap, killer: GEntity) { }
 
     /** 在发生与其它实体的碰撞时触发 */
-    fun onCollision(map: GMap, that: GEntity)
+    fun onCollision(map: GMap, that: GEntity) { }
 
     /** 在被添加到地图时触发 */
-    fun onGenerate(map: GMap)
+    fun onGenerate(map: GMap) { }
 
     /** 在被从地图移除后触发 */
-    fun onRemove(map: GMap)
+    fun onRemove(map: GMap) { }
 
     /** 返回当前对象的深拷贝对象 */
     fun copy(): GEntity
