@@ -101,7 +101,7 @@ JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_initN
     DWORD mode = 0;
     GetConsoleMode(stdInput, &mode);
     stdInputMode = mode;
-    //SetConsoleMode(stdInput, mode & ~ENABLE_QUICK_EDIT_MODE);
+    SetConsoleMode(stdInput, mode & ~ENABLE_QUICK_EDIT_MODE);
     if (ignoreClose)
         SetConsoleCtrlHandler(CtrlHandler, TRUE);
 }
