@@ -1,5 +1,7 @@
 package top.kmar.game.map
 
+import java.util.stream.Stream
+
 /**
  * 游戏实体，出现在游戏内的任何元素都应从该接口派生
  * @author 空梦
@@ -23,6 +25,9 @@ interface GEntity {
     val width: Int
     /** 实体宽度（单位：格） */
     val height: Int
+    /** 实体所占区域 */
+    val bound: Rect2D
+        get() = Rect2D(x, y, width, height)
 
     /** 实体右边界的坐标 */
     val right: Int
@@ -35,34 +40,14 @@ interface GEntity {
     fun render(graphics: SafeGraphics)
 
     /**
-     * 检查当前实体的指定位置是否具有碰撞体积。
+     * 获取当前实体指定区域内的碰撞信息。
      *
-     * 注意:传入的坐标是相对于地图的。
+     * 坐标相对于当前实体，返回的 Stream 中可以包含指定区域外的部分。
      */
-    fun hasCollision(x: Int, y: Int): Boolean
+    fun getCollision(x: Int, y: Int, width: Int, height: Int): Stream<Location2D>
 
-    /**
-     * 检查当前实体与指定实体是否存在碰撞
-     *
-     * @return 所有碰撞的实体
-     */
-    fun checkCollision(that: GEntity): Boolean {
-        for (y in this.y .. bottom) {
-            for (x in this.x .. right) {
-                if (hasCollision(x, y) && that.hasCollision(x, y))
-                    return true
-            }
-        }
-        return false
-    }
-
-    /**
-     * 判断当前实体与另一个实体的区域是否存在交叉。
-     *
-     * 该函数用于判断碰撞箱前的预筛选，排除不可能存在碰撞的实体。
-     */
-    fun hasIntersect(that: GEntity): Boolean =
-        x >= that.x && y >= that.y && right <= that.right && bottom <= that.bottom
+    /** @see getCollision */
+    fun getCollision(rect: Rect2D) = getCollision(rect.x, rect.y, rect.width, rect.height)
 
     /**
      * 更新实体状态

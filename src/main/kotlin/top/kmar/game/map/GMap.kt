@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 import java.util.function.BooleanSupplier
+import java.util.stream.Collectors
 import java.util.stream.Stream
 
 /**
@@ -46,8 +47,16 @@ class GMap private constructor(
     /** 检查指定实体与地图中其它实体是否存在碰撞 */
     private fun checkCollision(from: GEntity): Stream<GEntity> {
         if (!from.collisible) return Stream.empty()
+        val bound = from.bound
+        val collision = from.getCollision(0, 0, from.width, from.height).collect(Collectors.toSet())
         return collisibleEntity
-            .filter { it != from && from.hasIntersect(it) && from.checkCollision(it) }
+            .filter { it != from }
+            .filter { entity ->
+                val itBound = entity.bound
+                if (!bound.hasIntersection(itBound)) return@filter false
+                val rect = bound.intersect(entity.bound).mapToEntity(entity)
+                entity.getCollision(rect).anyMatch { it in collision }
+            }
     }
 
     /** 放置一个实体 */

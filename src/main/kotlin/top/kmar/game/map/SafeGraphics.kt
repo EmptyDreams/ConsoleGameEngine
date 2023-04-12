@@ -52,16 +52,16 @@ class SafeGraphics internal constructor(
             if (attr != -1) ConsolePrinter.modifyAttr(attr, bound.x, y, bound.width, index)
             ConsolePrinter.quickFillChar(char, bound.x, y, length, index)
         }
-        if (bound.bottom == this.y + y + height - 1) {
-            if (attr != -1) ConsolePrinter.modifyAttr(attr, bound.x, bound.bottom, bound.width, index)
-            ConsolePrinter.quickFillChar(char, bound.x, bound.bottom, length, index)
+        if (bound.bottom == this.y + y + height) {
+            if (attr != -1) ConsolePrinter.modifyAttr(attr, bound.x, bound.bottom - 1, bound.width, index)
+            ConsolePrinter.quickFillChar(char, bound.x, bound.bottom - 1, length, index)
         }
         if (bound.x == this.x + x) {
             if (attr != -1) ConsolePrinter.modifyAttr(attr, x, bound.y + 1, charWidth, bound.height - 2, index)
             ConsolePrinter.fillRect(char, bound.x, bound.y + 1, charWidth, bound.height - 2, index)
         }
-        if (bound.right == this.x + x + width - 1) {
-            val left = bound.right - charWidth + 1
+        if (bound.right == this.x + x + width) {
+            val left = bound.right - charWidth
             if (attr != -1) ConsolePrinter.modifyAttr(attr, left, bound.y + 1, charWidth, bound.height, index)
             ConsolePrinter.fillRect(char, left, bound.y + 1, charWidth, bound.height - 2, index)
         }
@@ -162,7 +162,7 @@ class SafeGraphics internal constructor(
                 drawStringLine(text.substring(preIndex), x, yFlag, maxWidth, 0, attr)
             ++yFlag
         }
-        return (yFlag - bound.bottom - 1).coerceAtLeast(0)
+        return (yFlag - bound.bottom).coerceAtLeast(0)
     }
 
     /**
