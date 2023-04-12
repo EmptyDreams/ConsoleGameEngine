@@ -61,28 +61,11 @@ data class Rect2D(val x: Int, val y: Int, val width: Int, val height: Int) : Com
 
 }
 
-/** 用于表示一个一维矩形（直线） */
-data class Rect1D(val x: Int, val width: Int) {
+/** 用于表示一个二维坐标 */
+data class Location2D(val x: Int, val y: Int) : Comparable<Location2D> {
 
-    /** 右边界（包含在矩形之中） */
-    val right: Int
-        get() = x + width - 1
-
-    val isEmpty: Boolean
-        get() = width == 0
-
-    companion object {
-
-        @JvmStatic
-        @get:JvmName("empty")
-        val empty = Rect1D(0, 0)
-
+    override fun compareTo(other: Location2D): Int {
+        return if (x != other.x) x - other.x else y - other.y
     }
 
 }
-
-/** 用于表示一个二维坐标 */
-data class Location2D(val x: Int, val y: Int)
-
-/** 用于表示一个二维的尺寸 */
-data class Size2D(val width: Int, val height: Int)
