@@ -62,9 +62,9 @@ data class Rect2D(val x: Int, val y: Int, val width: Int, val height: Int) : Com
 }
 
 /** 用于表示一个二维坐标 */
-data class Location2D(val x: Int, val y: Int) : Comparable<Location2D> {
+data class Point2D(val x: Int, val y: Int) : Comparable<Point2D> {
 
-    override fun compareTo(other: Location2D): Int {
+    override fun compareTo(other: Point2D): Int {
         return if (x != other.x) x - other.x else y - other.y
     }
 

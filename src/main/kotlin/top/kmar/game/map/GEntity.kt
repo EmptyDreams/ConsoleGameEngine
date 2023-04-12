@@ -44,7 +44,7 @@ interface GEntity {
      *
      * 坐标相对于当前实体，返回的 Stream 中可以包含指定区域外的部分。
      */
-    fun getCollision(x: Int, y: Int, width: Int, height: Int): Stream<Location2D>
+    fun getCollision(x: Int, y: Int, width: Int, height: Int): Stream<Point2D>
 
     /** @see getCollision */
     fun getCollision(rect: Rect2D) = getCollision(rect.x, rect.y, rect.width, rect.height)
