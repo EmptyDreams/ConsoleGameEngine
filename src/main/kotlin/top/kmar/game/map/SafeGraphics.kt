@@ -10,7 +10,7 @@ import kotlin.math.min
  * @author 空梦
  */
 @Suppress("MemberVisibilityCanBePrivate", "unused")
-class SafeGraphics internal constructor(
+class SafeGraphics @Deprecated("不应当调用该构造函数创建对象") internal constructor(
     /** 画笔在画布中的 X 轴坐标 */
     val x: Int,
     /** 画笔在画布中的 Y 轴坐标 */
@@ -237,10 +237,12 @@ class SafeGraphics internal constructor(
 
 }
 
+@Suppress("DEPRECATION")
 @JvmName("_ do not use")
 fun SafeGraphics(map: GMap, index: Int = ConsolePrinter.index): SafeGraphics =
     SafeGraphics(0, 0, map.width, map.height, index)
 
+@Suppress("DEPRECATION")
 @JvmName("_ do not use")
 fun SafeGraphics(map: GMap, x: Int, y: Int, width: Int, height: Int, index: Int = ConsolePrinter.index): SafeGraphics {
     val left = x.coerceAtLeast(0)
@@ -250,7 +252,7 @@ fun SafeGraphics(map: GMap, x: Int, y: Int, width: Int, height: Int, index: Int 
     return SafeGraphics(x, y, right - left, bottom - top, index)
 }
 
-@Suppress("FunctionName")
+@Suppress("FunctionName", "DEPRECATION")
 @JvmName("_ do not use")
 fun HalfSafeGraphics(x: Int, y: Int, width: Int, height: Int, index: Int): SafeGraphics =
     SafeGraphics(x, y, width, height, index)
