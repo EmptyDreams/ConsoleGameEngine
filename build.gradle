@@ -41,12 +41,6 @@ compileKotlin {
     }
 }
 
-jar {
-    from('libs') {
-        include '*.dll'
-    }
-}
-
 tasks.register('sourceJar', Jar) {
     from sourceSets.main.allSource
     archiveClassifier.set('sources')

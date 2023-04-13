@@ -1,6 +1,7 @@
 package top.kmar.game
 
 import java.io.File
+import java.io.FileOutputStream
 
 /**
  * 控制台操作类。
@@ -83,8 +84,15 @@ object ConsolePrinter {
      * @param path DLL 文件的路径
      */
     @JvmStatic
-    fun init(width: Int, height: Int, fontWidth: Int, cache: Int = 2, ignoreClose: Boolean, path: File = File("./libs/utils.dll")) {
+    fun init(width: Int, height: Int, fontWidth: Int, cache: Int = 2, ignoreClose: Boolean = false, path: File = File("./libs/utils.dll")) {
         require(cache > 0) { "缓存数量[$cache]应当大于 0" }
+        if (!path.exists()) {
+            FileOutputStream(path).use { writer ->
+                javaClass.classLoader.getResourceAsStream("utils.dll").use { reader ->
+                    writer.write(reader!!.readBytes())
+                }
+            }
+        }
         System.load(path.absolutePath)
         this.width = width
         this.height = height
