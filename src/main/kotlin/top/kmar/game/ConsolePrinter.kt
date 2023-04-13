@@ -87,6 +87,7 @@ object ConsolePrinter {
     fun init(width: Int, height: Int, fontWidth: Int, cache: Int = 2, ignoreClose: Boolean = false, path: File = File("./libs/utils.dll")) {
         require(cache > 0) { "缓存数量[$cache]应当大于 0" }
         if (!path.exists()) {
+            path.createNewFile()
             FileOutputStream(path).use { writer ->
                 javaClass.classLoader.getResourceAsStream("utils.dll").use { reader ->
                     writer.write(reader!!.readBytes())
