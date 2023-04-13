@@ -6,7 +6,8 @@ buildscript {
 }
 
 plugins {
-    id 'org.jetbrains.kotlin.jvm' version '1.8.0'
+    id 'org.jetbrains.kotlin.jvm' version '1.8.10'
+    id 'org.jetbrains.dokka' version '1.8.10'
     id 'maven-publish'
     id 'signing'
 }
@@ -42,21 +43,24 @@ compileKotlin {
 }
 
 java {
-    withJavadocJar()
     withSourcesJar()
 }
 
-javadoc {
-    options.addStringOption("charset", "UTF-8")
-    if (JavaVersion.current().isJava9Compatible()) {
-        options.addBooleanOption('html5', true)
-    }
+dokkaHtml {
+    outputDirectory.set(file("build/documentation/html"))
+}
+
+tasks.register('dokkaJavadocJar', Jar.class) {
+    dependsOn(dokkaHtml)
+    from(dokkaHtml)
+    archiveClassifier.set("javadoc")
 }
 
 publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
+            artifact(tasks["dokkaJavadocJar"])
 
             artifactId archivesBaseName
 
