@@ -4,3 +4,5 @@
 /out/production/classes/
 /META-INF/
 /.idea/
+gradle.properties
+/public/

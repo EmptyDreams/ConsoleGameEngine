@@ -7,9 +7,12 @@ buildscript {
 
 plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.8.0'
+    id 'maven-publish'
+    id 'signing'
 }
 
 group = 'top.kmar.game'
+archivesBaseName = 'cg-engine'
 version = '1.0.1'
 
 repositories {
@@ -18,7 +21,6 @@ repositories {
 }
 
 dependencies {
-    implementation files('./utils.dll')
     implementation group: 'it.unimi.dsi', name: 'fastutil-core', version: '8.5.12'
 }
 
@@ -37,4 +39,74 @@ compileKotlin {
                 "-Xvalidate-bytecode"           // 优化
         )
     }
+}
+
+jar {
+    from('libs') {
+        include '*.dll'
+    }
+}
+
+tasks.register('sourceJar', Jar) {
+    from sourceSets.main.allSource
+    archiveClassifier.set('sources')
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifact sourceJar {
+                classifier "sources"
+            }
+
+            artifactId archivesBaseName
+
+            pom {
+                name = 'Console Game Engine'
+                description = 'A console game engine for the JVM.'
+                url = 'https://github.com/EmptyDreams/ConsoleGameEngine'
+
+                scm {
+                    url = 'https://github.com/EmptyDreams/ConsoleGameEngine'
+                    connection = 'scm:git:git:github.com/EmptyDreams/ConsoleGameEngine.git'
+                    developerConnection = 'scm:git:ssh://git@github.com:EmptyDreams/ConsoleGameEngine.git'
+                }
+
+                licenses {
+                    license {
+                        name = 'The Affero General Public License, Version 3.0'
+                        url = 'https://www.gnu.org/licenses/agpl-3.0.en.html'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = 'Kmar'
+                        name = '空梦'
+                        email = 'minedreams@qq.com'
+                    }
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = archivesBaseName
+
+            def releasesRepoUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+            def snapshotsRepoUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+
+            credentials {
+                username ossrhUsername
+                password ossrhPassword
+            }
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.mavenJava
 }
