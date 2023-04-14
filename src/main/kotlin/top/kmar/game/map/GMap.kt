@@ -34,6 +34,8 @@ class GMap private constructor(
     private val entities = Int2ObjectRBTreeMap<MutableSet<GEntity>>()
     private val closed = AtomicBoolean(false)
     private val stopped = AtomicBoolean(false)
+    /** 每次渲染前的清图操作 */
+    var clear: () -> Unit = { ConsolePrinter.quickClear() }
 
     /** 所有实体 */
     val allEntity: Stream<GEntity>
@@ -76,6 +78,7 @@ class GMap private constructor(
     /** 渲染所有实体 */
     fun render() {
         require(!closed.get()) { "当前 GMap 已经被关闭，无法执行动作" }
+        clear()
         visibleEntity.forEach {
             val graphics = SafeGraphics(this, it.x, it.y, it.width, it.height, ConsolePrinter.index)
             it.render(graphics)
