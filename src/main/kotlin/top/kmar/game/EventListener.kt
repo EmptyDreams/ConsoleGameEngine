@@ -90,25 +90,41 @@ object EventListener {
     const val KEY_F23 = 134
     const val KEY_F24 = 135
 
-    // 主键盘区标点符号（如果有无 SHIFT 符号不相同，以未按 SHIFT 时的符号命名）
-    const val KEY_BACK_QUOTE = 192              // 反引号
-    const val KEY_MAIN_MINUS = 189              // 减号
-    const val KEY_EQUAL = 187                   // 等号
-    const val KEY_BRACKET_SQUARE_LEFT = 219     // 左方括号
-    const val KEY_BRACKET_SQUARE_RIGHT = 221    // 右方括号
-    const val KEY_SEMICOLON = 186               // 分号
-    const val KEY_QUOTE = 222                   // 引号
-    const val KEY_BACKSLASH = 220               // 反斜杠
-    const val KEY_COMMA = 188                   // 逗号
-    const val KEY_MAIN_POINT = 190              // 句号
-    const val KEY_MAIN_SLASH = 191              // 斜杠
+    // 主键盘区标点符号
+    /** 反引号、波浪线 */
+    const val KEY_BACK_QUOTE = 192
+    /** 减号、下划线 */
+    const val KEY_MAIN_MINUS = 189
+    /** 等于号、加号 */
+    const val KEY_EQUAL = 187
+    /** 左方括号、左大括号 */
+    const val KEY_BRACKET_SQUARE_LEFT = 219
+    /** 右方括号、右大括号 */
+    const val KEY_BRACKET_SQUARE_RIGHT = 221
+    /** 分号、冒号 */
+    const val KEY_SEMICOLON = 186
+    /** 单引号、双引号 */
+    const val KEY_QUOTE = 222
+    /** 反斜杠、竖线 */
+    const val KEY_BACKSLASH = 220
+    /** 逗号、左尖括号 */
+    const val KEY_COMMA = 188
+    /** 句号、右尖括号 */
+    const val KEY_MAIN_POINT = 190
+    /** 斜杠、问号 */
+    const val KEY_MAIN_SLASH = 191
 
     // 小键盘区标点符号
-    const val KEY_NUM_POINT = 110               // 小数点
-    const val KEY_NUM_SLASH = 111               // 除号
-    const val KEY_NUM_MULTIPLICATION = 106      // 乘号
-    const val KEY_NUM_MINUS = 108               // 减号
-    const val KEY_NUM_PLUS = 107                // 加号
+    /** 小数点 */
+    const val KEY_NUM_POINT = 110
+    /** 除号 */
+    const val KEY_NUM_SLASH = 111
+    /** 乘号 */
+    const val KEY_NUM_MULTIPLICATION = 106
+    /** 减号 */
+    const val KEY_NUM_MINUS = 108
+    /** 加号 */
+    const val KEY_NUM_PLUS = 107
 
     // 功能键
     const val KEY_SYS_RQ = 44

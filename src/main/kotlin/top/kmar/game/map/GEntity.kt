@@ -56,7 +56,7 @@ interface GEntity {
     fun update(map: GMap, time: Long)
 
     /** 使该实体被指定实体杀死 */
-    fun beKilled(map: GMap, killer: GEntity) { }
+    fun beKilled(map: GMap, killer: GEntity)
 
     /** 在发生与其它实体的碰撞时触发 */
     fun onCollision(map: GMap, that: GEntity) { }

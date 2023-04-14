@@ -25,7 +25,7 @@ import java.io.FileOutputStream
  *      　　这是用于控制终端字体颜色、背景颜色等属性的值，所有支持的类型已在 ConsolePrinter 中列出。需要注意的是，在调用 [flush] 函数时，
  *      同样不会清除上一次设置的 ATTR 信息。
  *
- *      　　除 clear 系列函数外的所有函数，传入 `attr = -1` 表示无效 attr，打印内容时将忽略 attr 信息。
+ *      　　除 clear 系列函数外的所有函数，传入 `attr = -1` 表示无效 attr，渲染内容时将忽略 attr 信息。
  *
  * + 字符宽度：
  *
@@ -51,24 +51,41 @@ object ConsolePrinter {
     var cache: Int = 0
         private set
 
+    /** 前景色：蓝 */
     const val FOREGROUND_BLUE = 0x1
+    /** 前景色：绿 */
     const val FOREGROUND_GREEN = 0x2
+    /** 前景色：红 */
     const val FOREGROUND_RED = 0x4
+    /** 前景色：高亮 */
     const val FOREGROUND_INTENSITY = 0x8
+    /** 前景色：高亮白 */
     const val FOREGROUND_WHITE = FOREGROUND_BLUE or FOREGROUND_GREEN or FOREGROUND_RED or FOREGROUND_INTENSITY
+    /** 背景色：蓝 */
     const val BACKGROUND_BLUE = 0x10
+    /** 背景色：绿 */
     const val BACKGROUND_GREEN = 0x20
+    /** 背景色：红 */
     const val BACKGROUND_RED = 0x40
+    /** 背景色：高亮 */
     const val BACKGROUND_INTENSITY = 0x80
+    /** 背景色：高亮白 */
     const val BACKGROUND_WHITE = BACKGROUND_BLUE or BACKGROUND_GREEN or BACKGROUND_RED or BACKGROUND_INTENSITY
+    /** 前导字节 */
     const val COMMON_LVB_LEADING_BYTE = 0x100
+    /** 尾随字节 */
     const val COMMON_LVB_TRAILING_BYTE = 0x200
+    /** 顶部水平网格 */
     const val COMMON_LVB_GRID_HORIZONTAL = 0x400
+    /** 左侧竖直网格 */
     @Suppress("SpellCheckingInspection")
     const val COMMON_LVB_GRID_LVERTICAL = 0x800
+    /** 右侧竖直网格 */
     @Suppress("SpellCheckingInspection")
     const val COMMON_LVB_GRID_RVERTICAL = 0x1000
+    /** 前景色、背景色反转 */
     const val COMMON_LVB_REVERSE_VIDEO = 0x4000
+    /** 下划线 */
     const val COMMON_LVB_UNDERSCORE = 0x8000
 
     /**
@@ -81,7 +98,7 @@ object ConsolePrinter {
      * @param height 纵向字符数量
      * @param fontWidth 一个字符的宽度（宽高比固定为 1:2）
      * @param cache 缓存数量，必须大于 0
-     * @param path DLL 文件的路径
+     * @param path DLL 文件的路径，DLL不存在时会自动生成（必须保证文件夹存在）
      */
     @JvmStatic
     fun init(width: Int, height: Int, fontWidth: Int, cache: Int = 2, ignoreClose: Boolean = false, path: File = File("./libs/utils.dll")) {
@@ -147,11 +164,16 @@ object ConsolePrinter {
         quickClearAllChar(char, index)
     }
 
+    /** 销毁控制台 */
     @JvmStatic
     fun dispose() {
         disposeN(cache)
     }
 
+    /**
+     * 获取一个字符的宽度
+     * @return 1 或 2
+     */
     @JvmStatic
     fun getCharWidth(char: Char): Int =
         if (char.code < 0x100) 1 else 2
