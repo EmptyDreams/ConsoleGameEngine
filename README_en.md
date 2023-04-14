@@ -23,13 +23,13 @@ Below we begin to explain the use of the engine.
 
 If you use `gradle `to manage project dependencies, add the following code to the `dependencies `statement:
 
-```JavaScript
+```gradle
 implementation group: 'top.kmar.game', name: 'cg-engine', version: 'x.x.x'
 ```
 
 If you use `maven `to manage project dependencies, please add the following code:
 
-```JavaScript
+```maven
 <dependency>
     <groupId>top.kmar.game</groupId>
     <artifactId>cg-engine</artifactId>
@@ -45,7 +45,7 @@ If you don't use any of the above methods to manage project dependencies, clone 
 
 Note: If you use Kotlin to develop programs, you must enable `K2 `, otherwise compilation will not be possible. Add the following code to `gradle `:
 
-```JavaScript
+```gradle
 compileKotlin {
     compilerOptions {
         freeCompilerArgs.addAll(
