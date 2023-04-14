@@ -164,6 +164,12 @@ object ConsolePrinter {
         quickClearAllChar(char, index)
     }
 
+    @JvmStatic
+    fun flush(index: Int = this.index) {
+        this.index = (index + 1) % cache
+        flushN(index)
+    }
+
     /** 销毁控制台 */
     @JvmStatic
     fun dispose() {
@@ -189,7 +195,7 @@ object ConsolePrinter {
      * 即使缓存数量为一也应当定期调用该函数，否则无法隐藏输入光标。
      */
     @JvmStatic
-    external fun flush(index: Int = this.index)
+    private external fun flushN(index: Int)
 
     /** 销毁控制台 */
     @JvmStatic

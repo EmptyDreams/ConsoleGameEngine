@@ -105,7 +105,7 @@ JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_initN
         SetConsoleCtrlHandler(CtrlHandler, TRUE);
 }
 
-JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_flush
+JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_flushN
         (JNIEnv *, jclass, jint index) {
     HANDLE buffer = buffers[index];
     // 隐藏光标

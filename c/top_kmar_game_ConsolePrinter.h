@@ -15,7 +15,7 @@ extern "C" {
 JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_initN
   (JNIEnv *, jclass, jint, jint, jint, jint, jboolean);
 
-JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_flush
+JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_flushN
         (JNIEnv *, jclass, jint);
 
 JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_disposeN
