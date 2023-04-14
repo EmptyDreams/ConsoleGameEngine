@@ -11,6 +11,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.atomic.AtomicReference
 import java.util.function.BooleanSupplier
 import java.util.stream.Collectors
 import java.util.stream.Stream
@@ -125,7 +126,7 @@ class GMap private constructor(
      * @param logicCondition 判断是否继续执行程序，返回 false 后会终止所有任务并退出当前函数
      */
     fun start(eventInterval: Long, logicInterval: Long, logicCondition: BooleanSupplier) {
-        val timer = startEventThread(eventInterval)
+        startEventThread(eventInterval)
         Thread.currentThread().name = "Logic Thread"
         prev.set(System.currentTimeMillis())
         var offset = 0L     // 偏移量，用于修复等待时间不正确时的情况
@@ -152,11 +153,10 @@ class GMap private constructor(
             update(time)
             render()
             if (stopped.get() || !logicCondition.asBoolean) {
-                timer.cancel()
+                timer.get().cancel()
                 break
             }
         }
-        prev.set(0L)
     }
 
     /**
@@ -167,7 +167,7 @@ class GMap private constructor(
      * 内部逻辑与 [start] 相同。
      */
     fun start(eventInterval: Long, logicCondition: BooleanSupplier) {
-        val timer = startEventThread(eventInterval)
+        startEventThread(eventInterval)
         Thread.currentThread().name = "Logic Thread"
         prev.set(System.currentTimeMillis())
         while (true) {
@@ -178,24 +178,23 @@ class GMap private constructor(
             update(time)
             render()
             if (stopped.get() || !logicCondition.asBoolean) {
-                timer.cancel()
+                timer.get().cancel()
                 break
             }
         }
-        prev.set(0L)
     }
 
-    private fun startEventThread(eventInterval: Long): Timer {
+    private fun startEventThread(eventInterval: Long) {
         require(!closed.get()) { "当前 GMap 已经被关闭，无法执行动作" }
-        if (prev.get() != 0L) throw AssertionError("不应该重复启动时序控制")
-        val timer = Timer("Event Listener Thread", true)
-        timer.scheduleAtFixedRate(object : TimerTask() {
+        if (timer.get() != null) throw AssertionError("不应该重复启动时序控制")
+        val value = Timer("Event Listener Thread", true)
+        value.scheduleAtFixedRate(object : TimerTask() {
             override fun run() {
                 EventListener.pushButtonEvent()
                 EventListener.pushMouseLocationEvent()
             }
         }, eventInterval, eventInterval)
-        return timer
+        timer.set(value)
     }
 
     /**
@@ -243,6 +242,12 @@ class GMap private constructor(
                 break
             }
         }
+    }
+
+    companion object {
+
+        val timer = AtomicReference<Timer>()
+
     }
 
     /**
