@@ -4,7 +4,7 @@ The engine is designed for JVM -side Console game development, and can also be u
 
 ✨ **Demo**
 
-[https://youtu.be/8MEbOSIptuA](https://user-images.githubusercontent.com/41804496/231933915-4928c5a4-e8c7-47f1-b411-90396c27a5e8.mp4  
+[https://youtu.be/8MEbOSIptuA](https://user-images.githubusercontent.com/41804496/231933915-4928c5a4-e8c7-47f1-b411-90396c27a5e8.mp4)  
 
 Synchronously published in： [Bilibili](https://www.bilibili.com/video/BV1kM411T7Bh) | [Youtube](https://www.youtube.com/watch?v=8MEbOSIptuA))  
 
