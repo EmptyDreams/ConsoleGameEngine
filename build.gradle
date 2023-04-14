@@ -14,7 +14,7 @@ plugins {
 
 group = 'top.kmar.game'
 archivesBaseName = 'cg-engine'
-version = '1.0.2'
+version = '1.1.0'
 
 repositories {
     maven { url = "https://maven.aliyun.com/repository/public" }
@@ -32,7 +32,7 @@ kotlin {
 compileKotlin {
     compilerOptions {
         freeCompilerArgs.addAll(
-                "-Xuse-k2",                     // k2
+                // "-Xuse-k2",                     // k2
                 "-Xjvm-default=all",            // 接口 default 方法
                 "-Xlambdas=indy",               // indy
                 "-Xassertions=always-disable",  // 禁用断言
