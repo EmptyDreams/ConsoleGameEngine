@@ -4,6 +4,7 @@ import top.kmar.game.listener.IButtonListener
 import top.kmar.game.listener.IKeyboardListener
 import top.kmar.game.listener.IMouseListener
 import top.kmar.game.listener.IMousePosListener
+import top.kmar.game.map.Point2D
 import java.util.*
 
 /**
@@ -219,6 +220,10 @@ object EventListener {
     /** 判断指定按键是否被按下 */
     @JvmStatic
     fun isPressed(code: Int) = keys[code]
+
+    /** 获取鼠标下标 */
+    @JvmStatic
+    fun getMousePos() = Point2D(mousePos[0], mousePos[1])
 
     /** 更新键盘和鼠标的按键输入并触发事件 */
     @JvmStatic
