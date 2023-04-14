@@ -47,7 +47,7 @@ implementation group: 'top.kmar.game', name: 'cg-engine', version: 'x.x.x'
 
 　　注意：如果你使用 Kotlin 开发程序，必须启用`K2`，否则无法编译，在`gradle`中添加如下代码即可：
 
-```groovy
+```gradle
 compileKotlin {
     compilerOptions {
         freeCompilerArgs.addAll(
