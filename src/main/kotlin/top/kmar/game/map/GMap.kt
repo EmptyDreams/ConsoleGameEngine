@@ -191,7 +191,7 @@ class GMap private constructor(
         val timer = Timer("Event Listener Thread", true)
         timer.scheduleAtFixedRate(object : TimerTask() {
             override fun run() {
-                EventListener.pushEvent()
+                EventListener.pushButtonEvent()
             }
         }, eventInterval, eventInterval)
         return timer

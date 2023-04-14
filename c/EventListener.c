@@ -6,14 +6,34 @@
 
 extern HANDLE stdInput;
 
-JNIEXPORT jint JNICALL Java_top_kmar_game_EventListener_getKeyMouseInput(
-        JNIEnv * env, jclass, jbooleanArray boolArray
+JNIEXPORT void JNICALL Java_top_kmar_game_EventListener_getKeyMouseInput(
+        JNIEnv* env, jclass, jbooleanArray boolArray
 ) {
     jboolean* array = (*env)->GetBooleanArrayElements(env, boolArray, FALSE);
     for (int i = 1; i != 223; ++i) {
         array[i] = GetAsyncKeyState(i) != 0;
     }
     (*env)->ReleaseBooleanArrayElements(env, boolArray, array, 0);
+}
+
+JNIEXPORT void JNICALL Java_top_kmar_game_EventListener_getMouseLocationN(
+        JNIEnv* env, jclass, jint width, jint height, jintArray intArray
+) {
+    HWND console = GetConsoleWindow();
+    if (console != GetForegroundWindow()) return;
+    jint* array = (*env)->GetIntArrayElements(env, intArray, FALSE);
+    POINT pos;
+    GetCursorPos(&pos);
+    RECT rect;
+    GetClientRect(console, &rect);
+    ScreenToClient(console, &pos);
+    if (PtInRect(&rect, pos)) {
+        int unitX = rect.right / width;
+        int unitY = rect.bottom / height;
+        array[0] = pos.x / unitX;
+        array[1] = pos.y / unitY;
+    }
+    (*env)->ReleaseIntArrayElements(env, intArray, array, 0);
 }
 
 #pragma clang diagnostic pop

@@ -1,8 +1,9 @@
 package top.kmar.game
 
-import top.kmar.game.listener.IKeyMouseListener
+import top.kmar.game.listener.IButtonListener
 import top.kmar.game.listener.IKeyboardListener
 import top.kmar.game.listener.IMouseListener
+import top.kmar.game.listener.IMousePosListener
 import java.util.*
 
 /**
@@ -156,9 +157,13 @@ object EventListener {
     @JvmStatic
     private var oldKeys = BooleanArray(233)     // 存储上一次的 key 值表
     @JvmStatic
+    private val mousePos = IntArray(2)
+    @JvmStatic
     private val keyboardListeners = LinkedList<IKeyboardListener>()
     @JvmStatic
     private val mouseListeners = LinkedList<IMouseListener>()
+    @JvmStatic
+    private val mousePosListeners = LinkedList<IMousePosListener>()
 
     /** 注册一个键盘事件 */
     @JvmStatic
@@ -172,6 +177,12 @@ object EventListener {
         mouseListeners.add(listener)
     }
 
+    /** 注册一个鼠标坐标事件 */
+    @JvmStatic
+    fun registryMousePosEvent(listener: IMousePosListener) {
+        mousePosListeners.add(listener)
+    }
+
     /** 删除一个键盘事件 */
     @JvmStatic
     fun removeKeyboardEvent(listener: IKeyboardListener) {
@@ -183,16 +194,22 @@ object EventListener {
         mouseListeners.remove(listener)
     }
 
+    /** 删除一个鼠标坐标事件 */
+    @JvmStatic
+    fun removeMousePosEvent(listener: IMousePosListener) {
+        mousePosListeners.remove(listener)
+    }
+
     /** 判断指定按键是否被按下 */
     @JvmStatic
     fun isPressed(code: Int) = keys[code]
 
-    /** 更新键盘和鼠标的输入并触发事件 */
+    /** 更新键盘和鼠标的按键输入并触发事件 */
     @JvmStatic
-    fun pushEvent() {
+    fun pushButtonEvent() {
         keys = oldKeys.apply { oldKeys = keys }
         getKeyMouseInput(keys)
-        fun compare(list: List<IKeyMouseListener>, index: Int) {
+        fun compare(list: List<IButtonListener>, index: Int) {
             if (keys[index]) {
                 if (oldKeys[index]) list.forEach { it.onActive(index) }
                 else {
@@ -213,8 +230,22 @@ object EventListener {
         }
     }
 
+    /** 更新鼠标坐标并发布事件 */
+    @JvmStatic
+    fun pushMouseLocationEvent() {
+        val oldX = mousePos[0]
+        val oldY = mousePos[1]
+        getMouseLocationN(ConsolePrinter.width, ConsolePrinter.height, mousePos)
+        if (oldX != mousePos[0] || oldY != mousePos[1]) {
+            mousePosListeners.forEach { it.onMove(mousePos[0], mousePos[1], oldX, oldY) }
+        }
+    }
+
     /** 获取按下的按键列表 */
     @JvmStatic
     private external fun getKeyMouseInput(array: BooleanArray)
+
+    @JvmStatic
+    private external fun getMouseLocationN(width: Int, height: Int, array: IntArray)
 
 }

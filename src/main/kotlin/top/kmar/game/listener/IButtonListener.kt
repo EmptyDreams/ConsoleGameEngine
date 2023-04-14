@@ -1,7 +1,7 @@
 package top.kmar.game.listener
 
-/** 鼠标或键盘事件 */
-interface IKeyMouseListener {
+/** 按键事件 */
+interface IButtonListener {
 
     /** 键盘按下时触发 */
     fun onPressed(code: Int)

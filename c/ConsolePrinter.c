@@ -91,7 +91,6 @@ JNIEXPORT void JNICALL Java_top_kmar_game_ConsolePrinter_initN
     LONG style = GetWindowLong(consoleWindow, GWL_STYLE);
     srcStyle = style;
     style = WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_VISIBLE;
-    style &= ~(ENABLE_QUICK_EDIT_MODE | ENABLE_MOUSE_INPUT | ENABLE_EXTENDED_FLAGS);
     SetWindowLong(consoleWindow, GWL_STYLE, style);
     buffers = malloc(sizeof(HANDLE) * cache);
     for (int i = 0; i != cache; ++i) {
