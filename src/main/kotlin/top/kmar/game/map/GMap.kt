@@ -331,12 +331,14 @@ class GMap private constructor(
             list.removeIf { it.get() == null }
             return if (list.isEmpty()) {
                 ConsolePrinter.dispose()
+                flag = true
                 true
             } else {
                 System.gc()
                 list.removeIf { it.get() == null }
                 if (list.isEmpty()) {
                     ConsolePrinter.dispose()
+                    flag = true
                     true
                 } else false
             }
