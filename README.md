@@ -19,7 +19,43 @@ https://user-images.githubusercontent.com/41804496/231933915-4928c5a4-e8c7-47f1-
 
 ⚠️注意：引擎目前只能在 **Windows** 平台使用，不支持其它平台！
 
-　　下面我们开始说明引擎的使用方法。
+　　下面我们开始说明引擎的使用方法。  
+  
+## 🏗️引入仓库
+
+　　如果你使用`gradle`管理项目依赖，那么在`dependencies`语句中添加如下代码：
+
+```groovy
+implementation group: 'top.kmar.game', name: 'cg-engine', version: 'x.x.x'
+```
+
+　　如果你使用`maven`管理项目依赖，请添加如下代码：
+
+```xml
+<dependency>
+    <groupId>top.kmar.game</groupId>
+    <artifactId>cg-engine</artifactId>
+    <version>x.x.x</version>
+</dependency>
+```
+
+　　最后的`version`填写你想使用的版本，截止文档最后一次更新，最新版为`1.0.2`。
+
+　　如果你使用`sbt`、`ivy`、`grape`、`leiningen`或`buildr`管理依赖，请参考[Maven Central](https://central.sonatype.com/artifact/top.kmar.game/cg-engine/)。
+
+　　如果你不使用上面任意一种方法管理项目依赖，请克隆 Github 仓库并手动编译代码，然后添加到你的项目中。
+
+　　注意：如果你使用 Kotlin 开发程序，必须启用`K2`，否则无法编译，在`gradle`中添加如下代码即可：
+
+```groovy
+compileKotlin {
+    compilerOptions {
+        freeCompilerArgs.addAll(
+                "-Xuse-k2"
+        )
+    }
+}
+```  
 
 ## ⚙️初始化和销毁 
 
