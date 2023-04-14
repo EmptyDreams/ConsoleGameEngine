@@ -14,15 +14,15 @@ fun main() {
         file = File("utils.dll")
         println(file!!.absolutePath)
     }.build().use {
-        val player = PlayerPlane((it.width - 7) shr 1, it.height - 8)
+        val player = PlayerPlane((it.width - 11) shr 1, it.height - 9)
         EventListener.registryMousePosEvent(object : IMousePosListener {
             override fun onMove(x: Int, y: Int, oldX: Int, oldY: Int) {
-                player.x = (x - 3).coerceAtLeast(0).coerceAtMost(it.width - player.width)
+                player.x = (x - 5).coerceAtLeast(0).coerceAtMost(it.width - player.width)
                 player.y = (y - 4).coerceAtLeast(0).coerceAtMost(it.height - player.height)
             }
         })
         it.putEntity(player, 1)
-        it.start(5, 50) { true }
+        it.start(5, 20) { true }
     }
     GMap.Builder.dispose()
 }
