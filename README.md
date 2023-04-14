@@ -25,13 +25,13 @@ https://user-images.githubusercontent.com/41804496/231933915-4928c5a4-e8c7-47f1-
 
 　　如果你使用`gradle`管理项目依赖，那么在`dependencies`语句中添加如下代码：
 
-```gradle
+```groovy
 implementation group: 'top.kmar.game', name: 'cg-engine', version: 'x.x.x'
 ```
 
 　　如果你使用`maven`管理项目依赖，请添加如下代码：
 
-```maven
+```xml
 <dependency>
     <groupId>top.kmar.game</groupId>
     <artifactId>cg-engine</artifactId>
@@ -47,7 +47,7 @@ implementation group: 'top.kmar.game', name: 'cg-engine', version: 'x.x.x'
 
 　　注意：如果你使用 Kotlin 开发程序，必须启用`K2`，否则无法编译，在`gradle`中添加如下代码即可：
 
-```gradle
+```groovy
 compileKotlin {
     compilerOptions {
         freeCompilerArgs.addAll(
