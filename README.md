@@ -15,6 +15,7 @@ https://user-images.githubusercontent.com/41804496/231933915-4928c5a4-e8c7-47f1-
 - 任意位置填充字符串
 - 任意位置修改文本属性
 - 监听键盘和鼠标的按键
+- 监听鼠标坐标
 - 无闪屏刷新（多缓冲）
 
 ⚠️注意：引擎目前只能在 **Windows** 平台使用，不支持其它平台！
@@ -39,23 +40,11 @@ implementation group: 'top.kmar.game', name: 'cg-engine', version: 'x.x.x'
 </dependency>
 ```
 
-　　最后的`version`填写你想使用的版本，截止文档最后一次更新，最新版为`1.0.2`。
+　　最后的`version`填写你想使用的版本，截止文档最后一次更新，最新版为`1.1.0`。
 
 　　如果你使用`sbt`、`ivy`、`grape`、`leiningen`或`buildr`管理依赖，请参考[Maven Central](https://central.sonatype.com/artifact/top.kmar.game/cg-engine/)。
 
 　　如果你不使用上面任意一种方法管理项目依赖，请克隆 Github 仓库并手动编译代码，然后添加到你的项目中。
-
-　　注意：如果你使用 Kotlin 开发程序，必须启用`K2`，否则无法编译，在`gradle`中添加如下代码即可：
-
-```groovy
-compileKotlin {
-    compilerOptions {
-        freeCompilerArgs.addAll(
-                "-Xuse-k2"
-        )
-    }
-}
-```  
 
 ## ⚙️初始化和销毁 
 
@@ -122,7 +111,7 @@ public class Main {
 
 ## ⌨️键鼠监听 
 
-　　引擎支持监听键盘和鼠标的按键输入（暂不支持鼠标坐标监听），相关函数均封装在 `EventListener` 中，调用 `pushEvent()` 函数即可发布一次键盘事件。
+　　引擎支持监听键盘和鼠标的按键输入和鼠标坐标的变化，相关函数均封装在 `EventListener` 中，调用 `pushButtonEvent()` 函数即可发布一次按键事件，调用`pushMouseLocationEvent()`函数即可发布一次鼠标移动事件。
 
 　　可以通过 `registry...` 函数注册事件：
 
@@ -138,7 +127,7 @@ public class Main {
 ```Kotlin
 fun main() {
     EventListener.registryKeyboardEvent(object : IKeyboardListener {
-        
+
         override fun onPressed(code: Int) {
             println("pressed: $code")
         }
@@ -147,11 +136,17 @@ fun main() {
             println("released: $code")
         }
 
-        override fun onActive(code: Int) { }
-        
+        override fun onActive(code: Int) {}
+
+    })
+    registryMousePosEvent(object : IMousePosListener {
+        override fun onMove(x: Int, y: Int, oldX: Int, oldY: Int) {
+            println("mouse from ($oldX, $oldY) to ($x, $y)")
+        }
     })
     while (true) {
-        EventListener.pushEvent()
+        EventListener.pushButtonEvent()
+        EventListener.pushMouseLocationEvent()
         Thread.sleep(10)
     }
 }
@@ -160,11 +155,13 @@ fun main() {
 **Java**
 
 ```Java
+import java.util.EventListener;
+
 public class Main {
 
     public static void main(String[] args) {
         EventListener.registryKeyboardEvent(new IKeyboardListener() {
-            
+
             @Override
             public void onPressed(int code) {
                 System.out.println("pressed: " + code);
@@ -176,22 +173,28 @@ public class Main {
             }
 
             @Override
-            public void onActive(int code) { }
-            
+            public void onActive(int code) {
+            }
+
+        });
+        EventListener.registryMousePosEvent((x, y, oldX, oldY) -> {
+            System.out.printf("mouse from (%d, %d) to (%d, %d)\n", oldX, oldY, x, y);
         });
         while (true) {
-            EventListener.pushEvent();
+            EventListener.pushButtonEvent();
+            EventListener.pushMouseLocationEvent();
             try {
                 Thread.sleep(50);
-            } catch (InterruptedException ignored) {
-            }
+            } catch (InterruptedException ignored) { }
         }
     }
 
 }
 ```
 
-请注意：调用 `pushEvent` 的时候，引擎只能检测当前按下的按键，无法检测调用 `pushEvent` 之前按下的按键，如果两次 `pushEvent` 调用的时间间隔过大，会非常容易漏掉一些输入，所以应当适当提高调用频率。
+　　请注意：调用 `pushButtonEvent` 的时候，引擎只能检测当前按下的按键，无法检测调用 `pushButtonEvent` 之前按下的按键，如果两次 `pushButtonEvent` 调用的时间间隔过大，会非常容易漏掉一些输入，所以应当适当提高调用频率。
+
+　　同理，调用 `pushMouseLocationEvent` 的时候也应当适当提高调用频率。
 
 ## 💿自定义实体 
 
