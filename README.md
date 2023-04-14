@@ -7,7 +7,7 @@
 ✨ **Demo**
 
 https://user-images.githubusercontent.com/41804496/231933915-4928c5a4-e8c7-47f1-b411-90396c27a5e8.mp4
-
+同步于： [Bilibili](https://www.bilibili.com/video/BV1kM411T7Bh) | [Youtube](https://www.youtube.com/watch?v=8MEbOSIptuA)
 
 🛠️目前引擎支持以下功能：
 
