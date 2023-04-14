@@ -19,6 +19,42 @@ Synchronously published in： [Bilibili](https://www.bilibili.com/video/BV1kM411
 
 Below we begin to explain the use of the engine.
 
+## 🏗️ Repository Declaration
+
+If you use `gradle `to manage project dependencies, add the following code to the `dependencies `statement:
+
+```JavaScript
+implementation group: 'top.kmar.game', name: 'cg-engine', version: 'x.x.x'
+```
+
+If you use `maven `to manage project dependencies, please add the following code:
+
+```JavaScript
+<dependency>
+    <groupId>top.kmar.game</groupId>
+    <artifactId>cg-engine</artifactId>
+    <version>x.x.x</version>
+</dependency>
+```
+
+Final `version `Fill in the version you want to use, as of the last update of doc, the latest version is `1.0.2 `.
+
+If you use `sbt `, `ivy `, `grape `, `leiningen `or `buildr `to manage dependencies, see [Maven Central] ( https://central.sonatype.com/artifact/top.kmar.game/cg-engine/) .
+
+If you don't use any of the above methods to manage project dependencies, clone the GitHub repository and manually compile the code, then add it to your project.
+
+Note: If you use Kotlin to develop programs, you must enable `K2 `, otherwise compilation will not be possible. Add the following code to `gradle `:
+
+```JavaScript
+compileKotlin {
+    compilerOptions {
+        freeCompilerArgs.addAll(
+                "-Xuse-k2"
+        )
+    }
+}
+```  
+
 ## ⚙️ initialization and destruction
 
 Before using the engine, you need to initialize the information of the Console. The initialization method has been encapsulated in `GMap. Builder `. The Console information will be automatically initialized when calling `GMap.Builder.build () `.
