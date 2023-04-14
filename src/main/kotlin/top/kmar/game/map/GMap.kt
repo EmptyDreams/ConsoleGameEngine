@@ -192,6 +192,7 @@ class GMap private constructor(
         timer.scheduleAtFixedRate(object : TimerTask() {
             override fun run() {
                 EventListener.pushButtonEvent()
+                EventListener.pushMouseLocationEvent()
             }
         }, eventInterval, eventInterval)
         return timer
