@@ -25,13 +25,13 @@ https://user-images.githubusercontent.com/41804496/231933915-4928c5a4-e8c7-47f1-
 
 　　如果你使用`gradle`管理项目依赖，那么在`dependencies`语句中添加如下代码：
 
-```groovy
+```gradle
 implementation group: 'top.kmar.game', name: 'cg-engine', version: 'x.x.x'
 ```
 
 　　如果你使用`maven`管理项目依赖，请添加如下代码：
 
-```xml
+```maven
 <dependency>
     <groupId>top.kmar.game</groupId>
     <artifactId>cg-engine</artifactId>
