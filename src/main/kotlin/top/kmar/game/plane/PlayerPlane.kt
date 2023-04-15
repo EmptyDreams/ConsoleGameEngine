@@ -8,13 +8,15 @@ import java.util.stream.Stream
 
 class PlayerPlane(
     override var x: Int,
-    override var y: Int
+    override var y: Int,
+    var blood: Int
 ) : GEntity {
 
     override val collisible = true
     override var died = false
     override val width = 11
     override val height = 9
+    var score = 0
 
     override fun render(graphics: SafeGraphics) {
         graphics.fillRect('@', width.shr(1) or 1, 0, 1, 1)
@@ -45,8 +47,8 @@ class PlayerPlane(
     }
 
     override fun update(map: GMap, time: Long) {
-        val bulletLeft = BulletEntity(x + 1, y + 2, 1, 1, 3)
-        val bulletRight = BulletEntity(right - 1, y + 2, 1, 1, 3)
+        val bulletLeft = BulletEntity(this, x + 1, y + 2, 1, 1, 1)
+        val bulletRight = BulletEntity(this, right - 1, y + 2, 1, 1, 1)
         map.runTaskOnLogicThread {
             map.putEntity(bulletLeft, 0)
             map.putEntity(bulletRight, 0)
@@ -58,6 +60,6 @@ class PlayerPlane(
         died = true
     }
 
-    override fun copy() = PlayerPlane(x, y)
+    override fun copy() = PlayerPlane(x, y, blood)
 
 }

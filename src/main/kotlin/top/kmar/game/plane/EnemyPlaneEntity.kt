@@ -43,10 +43,30 @@ class EnemyPlaneEntity(
             timer = 0
             if (++y == map.height) died = true
         }
+        map.checkCollision(this)
+            .forEach { onCollision(map, it) }
+    }
+
+    override fun onCollision(map: GMap, that: GEntity) {
+        when (that) {
+            is PlayerPlane -> {
+                died = true
+                --that.blood
+            }
+            is BulletEntity -> {
+                blood -= that.power
+                if (blood <= 0)
+                    beKilled(map, that.owner)
+                that.beKilled(map, this)
+            }
+        }
     }
 
     override fun beKilled(map: GMap, killer: GEntity) {
-
+        died = true
+        if (killer is PlayerPlane) {
+            ++killer.score
+        }
     }
 
     override fun copy() = EnemyPlaneEntity(x, y, width, height, blood)

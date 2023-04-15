@@ -7,6 +7,7 @@ import top.kmar.game.map.SafeGraphics
 import java.util.stream.Stream
 
 class BulletEntity(
+    val owner: GEntity,
     override var x: Int,
     override var y: Int,
     override val width: Int,
@@ -41,6 +42,6 @@ class BulletEntity(
         died = true
     }
 
-    override fun copy() = BulletEntity(x, y, width, height, power)
+    override fun copy() = BulletEntity(owner, x, y, width, height, power)
 
 }
