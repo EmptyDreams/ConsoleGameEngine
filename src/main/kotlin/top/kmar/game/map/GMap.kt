@@ -51,14 +51,18 @@ class GMap private constructor(
     private fun checkCollision(from: GEntity): Stream<GEntity> {
         if (!from.collisible) return Stream.empty()
         val bound = from.bound
-        val collision = from.getCollision(0, 0, from.width, from.height).collect(Collectors.toSet())
+        val collision = from.getCollision(0, 0, from.width, from.height)
+            .map { Point2D(it.x + from.x, it.y + from.y) }
+            .collect(Collectors.toSet())
         return collisibleEntity
             .filter { it != from }
             .filter { entity ->
                 val itBound = entity.bound
                 if (!bound.hasIntersection(itBound)) return@filter false
                 val rect = bound.intersect(entity.bound).mapToEntity(entity)
-                entity.getCollision(rect).anyMatch { it in collision }
+                entity.getCollision(rect)
+                    .map { Point2D(it.x + entity.x, it.y + entity.y) }
+                    .anyMatch { it in collision }
             }
     }
 
