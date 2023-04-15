@@ -36,7 +36,11 @@ class PlayerPlane(
 
     override fun getCollision(x: Int, y: Int, width: Int, height: Int): Stream<Point2D> {
         val builder = Stream.builder<Point2D>()
-
+        for (i in 0 until 5) {
+            for (k in 0 until 7) {
+                builder.add(Point2D(k + 2, i + 2))
+            }
+        }
         return builder.build()
     }
 
