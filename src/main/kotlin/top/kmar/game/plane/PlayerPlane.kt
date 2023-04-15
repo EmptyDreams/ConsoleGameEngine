@@ -41,8 +41,8 @@ class PlayerPlane(
     }
 
     override fun update(map: GMap, time: Long) {
-        val bulletLeft = BulletEntity(x + 1, y + 2, 1, 1)
-        val bulletRight = BulletEntity(right - 1, y + 2, 1, 1)
+        val bulletLeft = BulletEntity(x + 1, y + 2, 1, 1, 3)
+        val bulletRight = BulletEntity(right - 1, y + 2, 1, 1, 3)
         map.runTaskOnLogicThread {
             map.putEntity(bulletLeft, 0)
             map.putEntity(bulletRight, 0)

@@ -4,6 +4,7 @@ import top.kmar.game.EventListener
 import top.kmar.game.listener.IMousePosListener
 import top.kmar.game.map.GMap
 import java.io.File
+import java.util.*
 
 fun main() {
     GMap.Builder.apply {
@@ -21,6 +22,16 @@ fun main() {
                 player.y = (y - 4).coerceAtLeast(0).coerceAtMost(it.height - player.height)
             }
         })
+        var time = 0
+        val random = Random()
+        it.runTaskOnLogicThread {
+            if (++time == 80) {
+                time = 0
+                val x = random.nextInt(it.width - 9)
+                it.putEntity(EnemyPlaneEntity(x, -5, 9, 5, 5), 0)
+            }
+            false
+        }
         it.putEntity(player, 1)
         it.start(5, 20) { true }
     }
