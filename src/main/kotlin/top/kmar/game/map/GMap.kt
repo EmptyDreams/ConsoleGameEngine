@@ -48,7 +48,7 @@ class GMap private constructor(
         get() = allEntity.filter { it.collisible }
 
     /** 检查指定实体与地图中其它实体是否存在碰撞 */
-    private fun checkCollision(from: GEntity): Stream<GEntity> {
+    fun checkCollision(from: GEntity): Stream<GEntity> {
         if (!from.collisible) return Stream.empty()
         val bound = from.bound
         val collision = from.getCollision(0, 0, from.width, from.height)
