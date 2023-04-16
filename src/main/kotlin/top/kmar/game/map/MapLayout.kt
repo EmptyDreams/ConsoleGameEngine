@@ -31,20 +31,14 @@ class MapLayout(private val source: GMap) {
                     val it = itor.next()
                     if (it.died) {
                         itor.remove()
-                        source.runTaskOnLogicThread {
-                            it.onRemove(source)
-                            false
-                        }
+                        source.appendTask(GMap.BEFORE_UPDATE) { it.onRemove(source) }
                     }
                 }
             }
             addList.forEach {
                 val list = map.getOrPut(it.layer) { LinkedList() }
                 list.add(it.value)
-                source.runTaskOnLogicThread {
-                    it.value.onGenerate(source)
-                    false
-                }
+                source.appendTask(GMap.BEFORE_UPDATE) { it.value.onGenerate(source) }
             }
             addList.clear()
         }
