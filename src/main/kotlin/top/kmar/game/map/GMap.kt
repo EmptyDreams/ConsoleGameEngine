@@ -38,6 +38,9 @@ class GMap private constructor(
     private val stopped = AtomicBoolean(false)
     /** 每次渲染前的清图操作 */
     var clear: () -> Unit = { ConsolePrinter.quickClear() }
+    @Volatile
+    var fps = 0
+        private set
 
     /** 所有实体 */
     val allEntity: Stream<GEntity>
@@ -175,6 +178,7 @@ class GMap private constructor(
             render()
             taskManager.runTaskList(AFTER_RENDER)
             reusableTaskManager.runTaskListNoRemove(AFTER_RENDER)
+            fps = if (it == 0L) Int.MAX_VALUE else (1000 / it).toInt()
         }
         while (true) {
             Thread.sleep(1000)
