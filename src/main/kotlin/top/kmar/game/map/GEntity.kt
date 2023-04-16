@@ -1,5 +1,7 @@
 package top.kmar.game.map
 
+import top.kmar.game.utils.Point2D
+import top.kmar.game.utils.Rect2D
 import java.util.stream.Stream
 
 /**

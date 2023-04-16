@@ -9,6 +9,7 @@ abstract class AbstractEntity(
     visible: Boolean, collisible: Boolean
 ) : GEntity {
 
+    @Volatile
     final override var visible = visible
         private set
     final override var collisible = collisible
@@ -21,6 +22,7 @@ abstract class AbstractEntity(
         private set
     final override var height = height
         private set
+    @Volatile
     final override var died = false
         private set
 

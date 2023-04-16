@@ -1,7 +1,8 @@
 @file:Suppress("unused")
 
-package top.kmar.game.map
+package top.kmar.game.utils
 
+import top.kmar.game.map.GEntity
 import kotlin.math.max
 import kotlin.math.min
 
