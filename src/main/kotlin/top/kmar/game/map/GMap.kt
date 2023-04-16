@@ -10,7 +10,6 @@ import java.io.File
 import java.lang.ref.WeakReference
 import java.util.*
 import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.function.BooleanSupplier
 import java.util.stream.Collectors
 import java.util.stream.Stream
@@ -34,8 +33,10 @@ class GMap private constructor(
     private val entities = MapLayout(this)
     private val taskManager = TaskManager(5)
     private val reusableTaskManager = TaskManager(5)
-    private val closed = AtomicBoolean(false)
-    private val stopped = AtomicBoolean(false)
+    @Volatile
+    private var closed = false
+    @Volatile
+    private var stopped = false
     /** 每次渲染前的清图操作 */
     var clear: () -> Unit = { ConsolePrinter.quickClear() }
     @Volatile
@@ -78,7 +79,7 @@ class GMap private constructor(
 
     /** 渲染所有实体 */
     fun render() {
-        require(!closed.get()) { "当前 GMap 已经被关闭，无法执行动作" }
+        require(!closed) { "当前 GMap 已经被关闭，无法执行动作" }
         clear()
         entities.lock.withLock {
             visibleEntity.forEach {
@@ -99,7 +100,7 @@ class GMap private constructor(
      * @param task 要执行的任务，返回值用于标明是否移除任务，返回 true 会在执行任务后将任务移除，否则下一次逻辑循环将再一次执行该任务
      */
     fun runTaskOnLogicThread(task: BooleanSupplier) {
-        require(!closed.get()) { "当前 GMap 已经被关闭，无法执行动作" }
+        require(!closed) { "当前 GMap 已经被关闭，无法执行动作" }
         taskList.add(task)
     }
 
@@ -150,7 +151,7 @@ class GMap private constructor(
         require(eventInterval > 0 && logicInterval > 0 && renderInterval > 0) {
             "eventInterval[$eventInterval]、logicInterval[$logicInterval] 和 renderInterval[$renderInterval] 均应大于 0"
         }
-        require(!closed.get()) { "当前 GMap 已经被关闭，无法执行动作" }
+        require(!closed) { "当前 GMap 已经被关闭，无法执行动作" }
         val eventTimer = GTimer()
         eventTimer.startNonFixed("Event Thread", eventInterval, true) {
             EventListener.pushButtonEvent()
@@ -164,7 +165,7 @@ class GMap private constructor(
             taskManager.runTaskList(AFTER_UPDATE)
             reusableTaskManager.runTaskListNoRemove(AFTER_UPDATE)
             entities.sync()
-            if (stopped.get() || !logicCondition.asBoolean) {
+            if (stopped || !logicCondition.asBoolean) {
                 logicTimer.cancel()
             } else {
                 taskManager.runTaskList(AFTER_LOGIC)
@@ -197,7 +198,7 @@ class GMap private constructor(
      * 该函数是线程安全的。
      */
     fun interrupt() {
-        stopped.set(true)
+        stopped = true
     }
 
     /**
@@ -208,14 +209,14 @@ class GMap private constructor(
      * @param time 距离上一次执行的时间间隔（ms）
      */
     fun update(time: Long) {
-        require(!closed.get()) { "当前 GMap 已经被关闭，无法执行动作" }
+        require(!closed) { "当前 GMap 已经被关闭，无法执行动作" }
         allEntity.forEach { it.update(this, time) }
     }
 
     /** 关闭当前 map */
     override fun close() {
-        stopped.set(true)
-        closed.set(true)
+        stopped = true
+        closed = true
         val itor = Builder.list.iterator()
         while (itor.hasNext()) {
             val item = itor.next().get()
