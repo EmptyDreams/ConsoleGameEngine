@@ -30,8 +30,8 @@ fun main() {
         it.runTaskOnLogicThread {
             if (++time >= maxTime) {
                 time = 0
-                val x = random.nextInt(it.width - 9)
-                it.putEntity(EnemyPlaneEntity(x, -5, 9, 5, random.nextInt(25, maxBlood)), 0)
+                val x = random.nextInt(it.width - 10)
+                it.putEntity(EnemyPlaneEntity(x, -5, 10, 5, random.nextInt(25, maxBlood)), 0)
                 if (maxTime != 40 && random.nextBoolean())
                     --maxTime
                 if (maxBlood != 500 && random.nextBoolean())

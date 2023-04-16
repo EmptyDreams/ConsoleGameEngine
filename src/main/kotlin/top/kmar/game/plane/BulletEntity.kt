@@ -12,7 +12,8 @@ class BulletEntity(
     override var y: Int,
     override val width: Int,
     override val height: Int,
-    val power: Int
+    val power: Int,
+    val offset: Int = -1
 ) : GEntity {
 
     override val collisible = true
@@ -35,7 +36,8 @@ class BulletEntity(
     }
 
     override fun update(map: GMap, time: Long) {
-        if (--y == -1) died = true
+        y += offset
+        if (y < 0 || y >= map.height) died = true
     }
 
     override fun beKilled(map: GMap, killer: GEntity) {

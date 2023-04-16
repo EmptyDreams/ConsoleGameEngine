@@ -54,6 +54,13 @@ class PlayerPlane(
             map.putEntity(bulletRight, 0)
             true
         }
+        map.checkCollision(this)
+            .forEach {
+                if (it is BulletEntity && it.owner != this) {
+                    it.beKilled(map, this)
+                    blood -= it.power
+                }
+            }
     }
 
     override fun beKilled(map: GMap, killer: GEntity) {

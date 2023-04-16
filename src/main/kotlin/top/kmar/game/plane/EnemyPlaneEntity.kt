@@ -6,7 +6,7 @@ import top.kmar.game.map.Point2D
 import top.kmar.game.map.SafeGraphics
 import java.util.stream.Stream
 
-class EnemyPlaneEntity(
+open class EnemyPlaneEntity(
     override var x: Int,
     override var y: Int,
     override val width: Int,
@@ -19,7 +19,7 @@ class EnemyPlaneEntity(
 
     override fun render(graphics: SafeGraphics) {
         for (y in 0 until height) {
-            graphics.fillRect('⊕', y, y, (height - y - 1).shl(1) or 1, 1)
+            graphics.fillRect('⊕', y, y, (height - y).shl(1) or 1, 1)
         }
     }
 
@@ -28,14 +28,14 @@ class EnemyPlaneEntity(
         val bottom = y + height
         val right = x + width
         for (k in y until bottom) {
-            for (i in x until (k shl 1).or(1).coerceAtMost(right)) {
+            for (i in x until (right - k.shl(1)).coerceAtMost(right)) {
                 builder.add(Point2D(k + i, k))
             }
         }
         return builder.build()
     }
 
-    private var timer = 0
+    protected var timer = 0
 
     override fun update(map: GMap, time: Long) {
         if (blood == 0) died = true
