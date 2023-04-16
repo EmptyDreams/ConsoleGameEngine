@@ -20,6 +20,15 @@ class GTimer {
      * @param task 要执行的任务（接收的参数为两次任务执行之间的时间间隔）
      */
     fun start(name: String, interval: Long, isDaemon: Boolean, task: LongConsumer) {
+        if (interval == 0L) {
+            var prev = System.currentTimeMillis()
+            startNoWait(name, isDaemon) {
+                val now = System.currentTimeMillis()
+                task.accept(now - prev)
+                prev = now
+            }
+            return
+        }
         thread = Thread {
             val sleepBound = interval - 2
             var prev = System.currentTimeMillis()
@@ -60,6 +69,7 @@ class GTimer {
      * @param task 要执行的任务
      */
     fun startNonFixed(name: String, interval: Long, isDaemon: Boolean, task: Runnable) {
+        if (interval == 0L) return startNoWait(name, isDaemon, task)
         thread = Thread {
             while (!thread.isInterrupted) {
                 try {
@@ -67,6 +77,23 @@ class GTimer {
                 } catch (e: InterruptedException) {
                     break
                 }
+                task.run()
+            }
+        }
+        thread.name = name
+        thread.isDaemon = isDaemon
+        thread.start()
+    }
+
+    /**
+     * 启动一个无时间间隔的任务
+     * @param name 线程名称
+     * @param isDaemon 是否为守护线程
+     * @param task 要执行的任务
+     */
+    fun startNoWait(name: String, isDaemon: Boolean, task: Runnable) {
+        thread = Thread {
+            while (!thread.isInterrupted) {
                 task.run()
             }
         }
