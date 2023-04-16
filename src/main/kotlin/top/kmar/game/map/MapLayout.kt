@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectRBTreeMap
 import java.util.*
 import java.util.concurrent.locks.ReentrantLock
 import java.util.stream.Stream
+import kotlin.concurrent.withLock
 
 /**
  * 地图的分层管理器
@@ -23,8 +24,7 @@ class MapLayout(private val source: GMap) {
         get() = allEntities.filter { it.collisible }
 
     fun sync() {
-        try {
-            lock.lock()
+        lock.withLock {
             map.values.forEach { list ->
                 val itor = list.iterator()
                 while (itor.hasNext()) {
@@ -47,8 +47,6 @@ class MapLayout(private val source: GMap) {
                 }
             }
             addList.clear()
-        } finally {
-            lock.unlock()
         }
     }
 

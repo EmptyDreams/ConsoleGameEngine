@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.function.BooleanSupplier
 import java.util.stream.Collectors
 import java.util.stream.Stream
+import kotlin.concurrent.withLock
 
 /**
  * 游戏地图，存储和地图相关的所有数据，同时负责地图的打印。
@@ -73,14 +74,11 @@ class GMap private constructor(
     fun render() {
         require(!closed.get()) { "当前 GMap 已经被关闭，无法执行动作" }
         clear()
-        try {
-            entities.lock.lock()
+        entities.lock.withLock {
             visibleEntity.forEach {
                 val graphics = SafeGraphics(this, it.x, it.y, it.width, it.height, ConsolePrinter.index)
                 it.render(graphics)
             }
-        } finally {
-            entities.lock.unlock()
         }
         ConsolePrinter.flush()
     }
