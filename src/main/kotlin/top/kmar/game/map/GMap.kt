@@ -134,6 +134,7 @@ class GMap private constructor(
      *
      * @param eventInterval 事件监听的时间间隔
      * @param logicInterval 逻辑执行的时间间隔
+     * @param renderInterval 渲染执行时间间隔
      * @param logicCondition 判断是否继续执行程序，返回 false 后会终止所有任务并退出当前函数
      */
     fun start(eventInterval: Long, logicInterval: Long, renderInterval: Long, logicCondition: BooleanSupplier) {
