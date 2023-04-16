@@ -80,12 +80,16 @@ class GMap private constructor(
     fun render() {
         require(!closed) { "当前 GMap 已经被关闭，无法执行动作" }
         clear()
+        taskManager.runTaskList(BEFORE_RENDER)
+        reusableTaskManager.runTaskListNoRemove(BEFORE_RENDER)
         entities.lock.withLock {
             visibleEntity.forEach {
                 val graphics = SafeGraphics(this, it.x, it.y, it.width, it.height, ConsolePrinter.index)
                 it.render(graphics)
             }
         }
+        taskManager.runTaskList(AFTER_RENDER)
+        reusableTaskManager.runTaskListNoRemove(AFTER_RENDER)
         ConsolePrinter.flush()
     }
 
@@ -159,11 +163,7 @@ class GMap private constructor(
         }
         val renderTimer = GTimer()
         renderTimer.start("Render Thread", renderInterval, false) {
-            taskManager.runTaskList(BEFORE_RENDER)
-            reusableTaskManager.runTaskListNoRemove(BEFORE_RENDER)
             render()
-            taskManager.runTaskList(AFTER_RENDER)
-            reusableTaskManager.runTaskListNoRemove(AFTER_RENDER)
             fps = if (it == 0L) Int.MAX_VALUE else (1000 / it).toInt()
         }
         while (true) {
