@@ -148,11 +148,7 @@ class GMap private constructor(
         }
         val logicTimer = GTimer()
         logicTimer.start("Logic Thread", logicInterval, false) {
-            taskManager.runTaskList(BEFORE_UPDATE)
-            reusableTaskManager.runTaskListNoRemove(BEFORE_UPDATE)
             update(it)
-            taskManager.runTaskList(AFTER_UPDATE)
-            reusableTaskManager.runTaskListNoRemove(AFTER_UPDATE)
             entities.sync()
             if (stopped || !logicCondition.asBoolean) {
                 logicTimer.cancel()
@@ -195,7 +191,11 @@ class GMap private constructor(
      */
     fun update(time: Long) {
         require(!closed) { "当前 GMap 已经被关闭，无法执行动作" }
+        taskManager.runTaskList(BEFORE_UPDATE)
+        reusableTaskManager.runTaskListNoRemove(BEFORE_UPDATE)
         allEntity.forEach { it.update(this, time) }
+        taskManager.runTaskList(AFTER_UPDATE)
+        reusableTaskManager.runTaskListNoRemove(AFTER_UPDATE)
     }
 
     /** 关闭当前 map */
