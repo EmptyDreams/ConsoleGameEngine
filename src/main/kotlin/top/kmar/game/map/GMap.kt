@@ -4,6 +4,7 @@ import top.kmar.game.ConsolePrinter
 import top.kmar.game.EventListener
 import top.kmar.game.utils.GTimer
 import top.kmar.game.utils.Point2D
+import top.kmar.game.utils.TaskManager
 import java.io.Closeable
 import java.io.File
 import java.lang.ref.WeakReference
@@ -31,6 +32,8 @@ class GMap private constructor(
 ) : Closeable {
 
     private val entities = MapLayout(this)
+    private val taskManager = TaskManager(5)
+    private val reusableTaskManager = TaskManager(5)
     private val closed = AtomicBoolean(false)
     private val stopped = AtomicBoolean(false)
     /** 每次渲染前的清图操作 */
@@ -97,14 +100,27 @@ class GMap private constructor(
         taskList.add(task)
     }
 
-    /** 执行使用 [runTaskOnLogicThread] 添加的任务 */
-    fun invokeThreadTask() {
-        require(!closed.get()) { "当前 GMap 已经被关闭，无法执行动作" }
-        val itor = taskList.iterator()
-        while (itor.hasNext()) {
-            val item = itor.next()
-            if (item.asBoolean) itor.remove()
-        }
+    /**
+     * 添加一个普通任务
+     * @param flag 执行的时机
+     * @param task 要执行的任务
+     */
+    fun appendTask(flag: Int, task: Runnable) {
+        taskManager.add(flag, task)
+    }
+
+    /**
+     * 添加一个循环任务（执行后不会被删除）
+     * @param flag 执行的时机
+     * @param task 要执行的任务
+     */
+    fun appendReusableTask(flag: Int, task: Runnable) {
+        reusableTaskManager.add(flag, task)
+    }
+
+    /** 删除一个循环任务 */
+    fun removeReusableTask(flag: Int, task: Runnable) {
+        reusableTaskManager.removeTask(flag, task)
     }
 
     /**
@@ -118,9 +134,8 @@ class GMap private constructor(
      *
      * 每一次逻辑循环执行顺序如下（调用该函数后，用户不应当再手动调用下列函数）：
      *
-     * 1. [invokeThreadTask]
-     * 2. [update]
-     * 4. [logicCondition]
+     * 1. [update]
+     * 2. [logicCondition]
      *
      * 该函数会阻塞调用线程，直到逻辑线程和渲染线程执行完毕
      *
@@ -140,16 +155,26 @@ class GMap private constructor(
         }
         val logicTimer = GTimer()
         logicTimer.start("Logic Thread", logicInterval, false) {
-            invokeThreadTask()
+            taskManager.runTaskList(BEFORE_UPDATE)
+            reusableTaskManager.runTaskListNoRemove(BEFORE_UPDATE)
             update(it)
+            taskManager.runTaskList(AFTER_UPDATE)
+            reusableTaskManager.runTaskListNoRemove(AFTER_UPDATE)
             entities.sync()
             if (stopped.get() || !logicCondition.asBoolean) {
                 logicTimer.cancel()
+            } else {
+                taskManager.runTaskList(AFTER_LOGIC)
+                reusableTaskManager.runTaskListNoRemove(AFTER_LOGIC)
             }
         }
         val renderTimer = GTimer()
-        renderTimer.startNonFixed("Render Thread", renderInterval, false) {
+        renderTimer.start("Render Thread", renderInterval, false) {
+            taskManager.runTaskList(BEFORE_RENDER)
+            reusableTaskManager.runTaskListNoRemove(BEFORE_RENDER)
             render()
+            taskManager.runTaskList(AFTER_RENDER)
+            reusableTaskManager.runTaskListNoRemove(AFTER_RENDER)
         }
         while (true) {
             Thread.sleep(1000)
@@ -196,6 +221,21 @@ class GMap private constructor(
                 break
             }
         }
+    }
+
+    companion object {
+
+        /** [update] 执行前调用 */
+        const val BEFORE_UPDATE = 0
+        /** [update] 执行后调用 */
+        const val AFTER_UPDATE = 1
+        /** [render] 执行前调用（在渲染线程执行） */
+        const val BEFORE_RENDER = 2
+        /** [render] 执行后调用（在渲染线程执行） */
+        const val AFTER_RENDER = 3
+        /** 在整个逻辑循环执行完毕并确定继续下一次逻辑循环后调用 */
+        const val AFTER_LOGIC = 4
+
     }
 
     /**
