@@ -9,7 +9,6 @@ import java.io.Closeable
 import java.io.File
 import java.lang.ref.WeakReference
 import java.util.*
-import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.function.BooleanSupplier
 import java.util.stream.Collectors
 import java.util.stream.Stream
@@ -88,20 +87,6 @@ class GMap private constructor(
             }
         }
         ConsolePrinter.flush()
-    }
-
-    private val taskList = ConcurrentLinkedQueue<BooleanSupplier>()
-
-    /**
-     * 将一个任务添加到逻辑线程执行。
-     *
-     * 该函数是线程安全的。
-     *
-     * @param task 要执行的任务，返回值用于标明是否移除任务，返回 true 会在执行任务后将任务移除，否则下一次逻辑循环将再一次执行该任务
-     */
-    fun runTaskOnLogicThread(task: BooleanSupplier) {
-        require(!closed) { "当前 GMap 已经被关闭，无法执行动作" }
-        taskList.add(task)
     }
 
     /**
