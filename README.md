@@ -117,8 +117,9 @@ public class Main {
 
 - `registryKeyboardEvent` - 注册键盘事件
 - `registryMouseEvent` - 注册鼠标事件
+- `registryMousePosEvent` - 注册鼠标坐标事件
 
-　　两个函数均有对应的 `remove` 函数，可以用于移除指定事件。
+　　上述函数均有对应的 `remove` 函数，可以用于移除指定事件。
 
 　　下面给出监听事件的示例代码：
 
