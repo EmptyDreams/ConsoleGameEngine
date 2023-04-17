@@ -1,20 +1,18 @@
 package top.kmar.game.map
 
-import it.unimi.dsi.fastutil.ints.Int2ObjectRBTreeMap
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet
 import top.kmar.game.ConsolePrinter
 import top.kmar.game.EventListener
+import top.kmar.game.utils.GTimer
+import top.kmar.game.utils.Point2D
+import top.kmar.game.utils.TaskManager
 import java.io.Closeable
 import java.io.File
 import java.lang.ref.WeakReference
 import java.util.*
-import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicLong
-import java.util.concurrent.atomic.AtomicReference
 import java.util.function.BooleanSupplier
 import java.util.stream.Collectors
 import java.util.stream.Stream
+import kotlin.concurrent.withLock
 
 /**
  * 游戏地图，存储和地图相关的所有数据，同时负责地图的打印。
@@ -31,21 +29,28 @@ class GMap private constructor(
     val height: Int
 ) : Closeable {
 
-    private val entities = Int2ObjectRBTreeMap<MutableSet<GEntity>>()
-    private val closed = AtomicBoolean(false)
-    private val stopped = AtomicBoolean(false)
+    private val entities = MapLayout(this)
+    private val taskManager = TaskManager(5)
+    private val reusableTaskManager = TaskManager(5)
+    @Volatile
+    private var closed = false
+    @Volatile
+    private var stopped = false
     /** 每次渲染前的清图操作 */
     var clear: () -> Unit = { ConsolePrinter.quickClear() }
+    @Volatile
+    var fps = 0
+        private set
 
     /** 所有实体 */
     val allEntity: Stream<GEntity>
-        get() = entities.values.stream().flatMap { it.stream() }.filter { !it.died }
+        get() = entities.allEntities
     /** 所有可视实体 */
     val visibleEntity: Stream<GEntity>
-        get() = allEntity.filter { it.visible }
+        get() = entities.visibleEntities
     /** 所有可碰撞实体 */
     val collisibleEntity: Stream<GEntity>
-        get() = allEntity.filter { it.collisible }
+        get() = entities.collisibleEntities
 
     /** 检查指定实体与地图中其它实体是否存在碰撞 */
     fun checkCollision(from: GEntity): Stream<GEntity> {
@@ -68,140 +73,105 @@ class GMap private constructor(
 
     /** 放置一个实体 */
     fun putEntity(entity: GEntity, layout: Int) {
-        require(!closed.get()) { "当前 GMap 已经被关闭，无法执行动作" }
-        val list = entities.getOrPut(layout) { ObjectOpenHashSet(width * height) }
-        list.add(entity)
-        entity.onGenerate(this)
-        checkCollision(entity)
-            .forEach {
-                it.onCollision(this, entity)
-                entity.onCollision(this, it)
-            }
+        entities.add(entity, layout)
     }
 
     /** 渲染所有实体 */
     fun render() {
-        require(!closed.get()) { "当前 GMap 已经被关闭，无法执行动作" }
+        require(!closed) { "当前 GMap 已经被关闭，无法执行动作" }
         clear()
-        visibleEntity.forEach {
-            val graphics = SafeGraphics(this, it.x, it.y, it.width, it.height, ConsolePrinter.index)
-            it.render(graphics)
+        taskManager.runTaskList(BEFORE_RENDER)
+        reusableTaskManager.runTaskListNoRemove(BEFORE_RENDER)
+        entities.lock.withLock {
+            visibleEntity.forEach {
+                val graphics = SafeGraphics(this, it.x, it.y, it.width, it.height, ConsolePrinter.index)
+                it.render(graphics)
+            }
         }
+        taskManager.runTaskList(AFTER_RENDER)
+        reusableTaskManager.runTaskListNoRemove(AFTER_RENDER)
         ConsolePrinter.flush()
     }
 
-    private val taskList = ConcurrentLinkedQueue<BooleanSupplier>()
+    /**
+     * 添加一个普通任务
+     * @param flag 执行的时机
+     * @param task 要执行的任务
+     */
+    fun appendTask(flag: Int, task: Runnable) {
+        taskManager.add(flag, task)
+    }
 
     /**
-     * 将一个任务添加到逻辑线程执行。
-     *
-     * 该函数是线程安全的。
-     *
-     * @param task 要执行的任务，返回值用于标明是否移除任务，返回 true 会在执行任务后将任务移除，否则下一次逻辑循环将再一次执行该任务
+     * 添加一个循环任务（执行后不会被删除）
+     * @param flag 执行的时机
+     * @param task 要执行的任务
      */
-    fun runTaskOnLogicThread(task: BooleanSupplier) {
-        require(!closed.get()) { "当前 GMap 已经被关闭，无法执行动作" }
-        taskList.add(task)
+    fun appendReusableTask(flag: Int, task: Runnable) {
+        reusableTaskManager.add(flag, task)
     }
 
-    /** 执行使用 [runTaskOnLogicThread] 添加的任务 */
-    fun invokeThreadTask() {
-        require(!closed.get()) { "当前 GMap 已经被关闭，无法执行动作" }
-        val itor = taskList.iterator()
-        while (itor.hasNext()) {
-            val item = itor.next()
-            if (item.asBoolean) itor.remove()
-        }
+    /** 删除一个循环任务 */
+    fun removeReusableTask(flag: Int, task: Runnable) {
+        reusableTaskManager.removeTask(flag, task)
     }
-
-    private var prev = AtomicLong(0L)
 
     /**
      * 让引擎接管所有时序控制。
      *
-     * 事件监听的内容将在另一个线程中执行，逻辑内容在当前线程执行，所以该函数仍然会阻塞调用线程。
+     * 该函数会启动三个线程，分别为：
+     *
+     * 1. 逻辑线程 - 用于执行逻辑任务
+     * 2. 渲染线程 - 用于执行渲染任务
+     * 3. 事件线程 - 用于监听和发布事件
      *
      * 每一次逻辑循环执行顺序如下（调用该函数后，用户不应当再手动调用下列函数）：
      *
-     * 1. [invokeThreadTask]
-     * 2. [update]
-     * 3. [render]
-     * 4. [logicCondition]
+     * 1. [update]
+     * 2. [logicCondition]
+     *
+     * 该函数会阻塞调用线程，直到逻辑线程和渲染线程执行完毕
      *
      * @param eventInterval 事件监听的时间间隔
      * @param logicInterval 逻辑执行的时间间隔
+     * @param renderInterval 渲染执行时间间隔
      * @param logicCondition 判断是否继续执行程序，返回 false 后会终止所有任务并退出当前函数
      */
-    fun start(eventInterval: Long, logicInterval: Long, logicCondition: BooleanSupplier) {
-        startEventThread(eventInterval)
-        Thread.currentThread().name = "Logic Thread"
-        prev.set(System.currentTimeMillis())
-        var offset = 0L     // 偏移量，用于修复等待时间不正确时的情况
-        val sleepBound = logicInterval - 2
-        while (true) {
-            val prev = prev.get()
-            var now = System.currentTimeMillis()
-            var time = now - prev + offset
-            // sleep 等待
-            while (time < sleepBound) {
-                Thread.sleep(sleepBound - time)
-                now = System.currentTimeMillis()
-                time = now - prev + offset
+    fun start(eventInterval: Long, logicInterval: Long, renderInterval: Long, logicCondition: BooleanSupplier) {
+        require(eventInterval > 0 && logicInterval > 0 && renderInterval > 0) {
+            "eventInterval[$eventInterval]、logicInterval[$logicInterval] 和 renderInterval[$renderInterval] 均应大于 0"
+        }
+        require(!closed) { "当前 GMap 已经被关闭，无法执行动作" }
+        val eventTimer = GTimer()
+        eventTimer.startNonFixed("Event Thread", eventInterval, true) {
+            EventListener.pushButtonEvent()
+            EventListener.pushMouseLocationEvent()
+        }
+        val logicTimer = GTimer()
+        logicTimer.start("Logic Thread", logicInterval, false) {
+            update(it)
+            entities.sync()
+            if (stopped || !logicCondition.asBoolean) {
+                logicTimer.cancel()
+            } else {
+                taskManager.runTaskList(AFTER_LOGIC)
+                reusableTaskManager.runTaskListNoRemove(AFTER_LOGIC)
             }
-            // 自旋等待
-            while (time < logicInterval) {
-                now = System.currentTimeMillis()
-                time = now - prev + offset
-            }
-            time = now - prev
-            offset += time - logicInterval
-            this.prev.set(now)
-            invokeThreadTask()
-            update(time)
+        }
+        val renderTimer = GTimer()
+        renderTimer.start("Render Thread", renderInterval, false) {
             render()
-            if (stopped.get() || !logicCondition.asBoolean) {
-                timer.get().cancel()
+            fps = if (it == 0L) Int.MAX_VALUE else (1000 / it).toInt()
+        }
+        while (true) {
+            Thread.sleep(1000)
+            if (!(logicTimer.alive && renderTimer.alive)) {
+                logicTimer.cancel()
+                renderTimer.cancel()
+                eventTimer.cancel()
                 break
             }
         }
-    }
-
-    /**
-     * 让引擎接管所有时序控制。
-     *
-     * 与 [start] 不同的是，该函数执行逻辑线程时不会进行等待，一次循环结束后会马上开始第二次循环。
-     *
-     * 内部逻辑与 [start] 相同。
-     */
-    fun start(eventInterval: Long, logicCondition: BooleanSupplier) {
-        startEventThread(eventInterval)
-        Thread.currentThread().name = "Logic Thread"
-        prev.set(System.currentTimeMillis())
-        while (true) {
-            val now = System.currentTimeMillis()
-            val time = now - prev.get()
-            prev.set(now)
-            invokeThreadTask()
-            update(time)
-            render()
-            if (stopped.get() || !logicCondition.asBoolean) {
-                timer.get().cancel()
-                break
-            }
-        }
-    }
-
-    private fun startEventThread(eventInterval: Long) {
-        require(!closed.get()) { "当前 GMap 已经被关闭，无法执行动作" }
-        if (timer.get() != null) throw AssertionError("不应该重复启动时序控制")
-        val value = Timer("Event Listener Thread", true)
-        value.scheduleAtFixedRate(object : TimerTask() {
-            override fun run() {
-                EventListener.pushButtonEvent()
-                EventListener.pushMouseLocationEvent()
-            }
-        }, eventInterval, eventInterval)
-        timer.set(value)
     }
 
     /**
@@ -209,9 +179,8 @@ class GMap private constructor(
      *
      * 该函数是线程安全的。
      */
-    fun stop() {
-        require(prev.get() != 0L) { "任务未启动" }
-        stopped.set(true)
+    fun interrupt() {
+        stopped = true
     }
 
     /**
@@ -222,24 +191,18 @@ class GMap private constructor(
      * @param time 距离上一次执行的时间间隔（ms）
      */
     fun update(time: Long) {
-        require(!closed.get()) { "当前 GMap 已经被关闭，无法执行动作" }
+        require(!closed) { "当前 GMap 已经被关闭，无法执行动作" }
+        taskManager.runTaskList(BEFORE_UPDATE)
+        reusableTaskManager.runTaskListNoRemove(BEFORE_UPDATE)
         allEntity.forEach { it.update(this, time) }
-        entities.values.forEach { list ->
-            val itor = list.iterator()
-            while (itor.hasNext()) {
-                val item = itor.next()
-                if (item.died) {
-                    itor.remove()
-                    item.onRemove(this)
-                }
-            }
-        }
+        taskManager.runTaskList(AFTER_UPDATE)
+        reusableTaskManager.runTaskListNoRemove(AFTER_UPDATE)
     }
 
     /** 关闭当前 map */
     override fun close() {
-        require(prev.get() == 0L) { "GMap 的逻辑正在进行，无法关闭" }
-        closed.set(true)
+        stopped = true
+        closed = true
         val itor = Builder.list.iterator()
         while (itor.hasNext()) {
             val item = itor.next().get()
@@ -253,7 +216,16 @@ class GMap private constructor(
 
     companion object {
 
-        val timer = AtomicReference<Timer>()
+        /** [update] 执行前调用 */
+        const val BEFORE_UPDATE = 0
+        /** [update] 执行后调用 */
+        const val AFTER_UPDATE = 1
+        /** [render] 执行前调用（在渲染线程执行） */
+        const val BEFORE_RENDER = 2
+        /** [render] 执行后调用（在渲染线程执行） */
+        const val AFTER_RENDER = 3
+        /** 在整个逻辑循环执行完毕并确定继续下一次逻辑循环后调用 */
+        const val AFTER_LOGIC = 4
 
     }
 

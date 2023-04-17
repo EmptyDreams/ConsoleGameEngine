@@ -2,6 +2,7 @@ package top.kmar.game.map
 
 import top.kmar.game.ConsolePrinter
 import top.kmar.game.ConsolePrinter.getCharWidth
+import top.kmar.game.utils.Rect2D
 import kotlin.math.max
 import kotlin.math.min
 

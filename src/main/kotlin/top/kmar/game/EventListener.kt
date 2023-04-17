@@ -4,7 +4,7 @@ import top.kmar.game.listener.IButtonListener
 import top.kmar.game.listener.IKeyboardListener
 import top.kmar.game.listener.IMouseListener
 import top.kmar.game.listener.IMousePosListener
-import top.kmar.game.map.Point2D
+import top.kmar.game.utils.Point2D
 import java.util.*
 
 /**

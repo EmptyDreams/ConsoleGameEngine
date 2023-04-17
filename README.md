@@ -40,7 +40,7 @@ implementation group: 'top.kmar.game', name: 'cg-engine', version: 'x.x.x'
 </dependency>
 ```
 
-　　最后的`version`填写你想使用的版本，截止文档最后一次更新，最新版为`1.1.0`。
+　　最后的`version`填写你想使用的版本，截止文档最后一次更新，最新版为`1.2.0`。
 
 　　如果你使用`sbt`、`ivy`、`grape`、`leiningen`或`buildr`管理依赖，请参考[Maven Central](https://central.sonatype.com/artifact/top.kmar.game/cg-engine/)。
 
@@ -117,8 +117,9 @@ public class Main {
 
 - `registryKeyboardEvent` - 注册键盘事件
 - `registryMouseEvent` - 注册鼠标事件
+- `registryMousePosEvent` - 注册鼠标坐标事件
 
-　　两个函数均有对应的 `remove` 函数，可以用于移除指定事件。
+　　上述函数均有对应的 `remove` 函数，可以用于移除指定事件。
 
 　　下面给出监听事件的示例代码：
 
@@ -139,11 +140,9 @@ fun main() {
         override fun onActive(code: Int) {}
 
     })
-    registryMousePosEvent(object : IMousePosListener {
-        override fun onMove(x: Int, y: Int, oldX: Int, oldY: Int) {
-            println("mouse from ($oldX, $oldY) to ($x, $y)")
-        }
-    })
+    registryMousePosEvent { x, y, oldX, oldY ->
+        println("mouse from ($oldX, $oldY) to ($x, $y)")
+    }
     while (true) {
         EventListener.pushButtonEvent()
         EventListener.pushMouseLocationEvent()
@@ -349,6 +348,82 @@ public class BlockEntity implements GEntity {
 }
 ```
 
+　　引擎还提供了一个抽象类`AbstractEntity`，其中实现了`x`、`y`等这些非常简单的属性，大部分实体都可以使用`AbstractEntity`来简化代码，上面的代码修改后为：
+
+**Kotlin**
+
+```kotlin
+class BlockEntity(
+    x: Int, y: Int, width: Int, height: Int
+) : AbstractEntity(x, y, width, height, true, true) {
+
+    override fun render(graphics: SafeGraphics) {
+        graphics.fillRect('#', 0, 0, width, height)
+    }
+
+    override fun getCollision(x: Int, y: Int, width: Int, height: Int): Stream<Point2D> {
+        val builder = Stream.builder<Point2D>()
+        val right = x + width
+        val bottom = y + height
+        for (i in y until bottom) {
+            for (k in x until right) {
+                builder.add(Point2D(k, i))
+            }
+        }
+        return builder.build()
+    }
+
+    override fun update(map: GMap, time: Long) {
+        // do something
+    }
+
+    override fun copy() = BlockEntity(x, y, width, height)
+
+}
+```
+
+**Java**
+
+```java
+public class BlockEntity extends AbstractEntity {
+    
+    public BlockEntity(int x, int y, int width, int height) {
+        super(x, y, width, height, true, true);
+    }
+
+    @Override
+    public void render(@NotNull SafeGraphics graphics) {
+        graphics.fillRect('#', 0, 0, width, height, -1);
+    }
+
+    @NotNull
+    @Override
+    public Stream<Point2D> getCollision(int x, int y, int width, int height) {
+        Stream.Builder<Point2D> builder = Stream.builder();
+        int right = x + width;
+        int bottom = y + height;
+        for (int i = y; y != bottom; ++y) {
+            for (int k = x; k != right; ++k) {
+                builder.add(new Point2D(k, i));
+            }
+        }
+        return builder.build();
+    }
+
+    @Override
+    public void update(@NotNull GMap map, long time) {
+        // do something
+    }
+
+    @NotNull
+    @Override
+    public GEntity copy() {
+        return new BlockEntity(x, y, width, height);
+    }
+
+}
+```
+
 ## 🖊️使用画笔 
 
 　　引擎提供了 `SafeGraphics` 类用来绘制图形，其中封装了基础的绘制函数。同时正如其名所说的一样，这个类是一个“安全”的画笔类，它可以确保绘制的内容不会超过为其设定的边界。
@@ -364,10 +439,9 @@ graphics.fillRect(#, 0, 0, 1, 1)
 　　至于绘制中所用到的一些概念如下所示：
 
 - ATTR： 这是用于控制终端字体颜色、背景颜色等属性的值，所有支持的类型已在 `ConsolePrinter` 中列出。需要注意的是，在调用 `flush` 函数时， 同样不会清除上一次设置的 ATTR 信息。
--  除 clear 系列函数外的所有函数，传入 `attr = -1` 表示无效 attr，打印内容时将忽略 attr 信息。
+    除 clear 系列函数外的所有函数，传入 `attr = -1` 表示无效 attr，打印内容时将忽略 attr 信息。
 - 字符宽度： 在控制台中，不同字符宽度不同，拉丁文字符宽度为 1，而中文字符宽度为 2，计算字符宽度时，满足 `char < 0x100` 的宽度视为 1，否则为 2。
-
-　　更多的内容可以查阅 `ConsolePrinter` 类中的注释，其中有详细说明。
+    更多的内容可以查阅 `ConsolePrinter` 类中的注释，其中有详细说明。
 
 　　一般情况下，我们 `GMap` 类会自动为用户生成画笔，并不需要用户自己创建，但是如果想要手动创建画笔对象的话可以参考以下代码：
 
@@ -378,7 +452,6 @@ fun main() {
     GMap.Builder.apply {
         width = 80
         height = 40
-        file = File("D:\\Workspace\\jni\\cmake-build-release\\libjni.dll")
     }.build().use {
         // 创建一个和地图等大的画笔
         val g1 = SafeGraphics(it)
@@ -420,40 +493,50 @@ public class Main {
 
 　　引擎支持用户自己进行时序控制，也支持让引擎接管所有时序控制，调用 `GMap#start` 即可使引擎接管所有任务。
 
-　　请注意：如果让引擎接管时序控制，逻辑任务和事件任务将不在一个线程中执行，可以使用 `GMap#runTaskOnLogicThread` 将一个任务添加到逻辑线程中执行，该函数是线程安全的。
+　　**请注意！！！**
 
-　　代码如下所示：
+　　引擎接管时序控制后，会创建三个线程，分别用于执行“逻辑任务”、“渲染任务”和“事件任务”，编写代码时请注意线程同步问题。`GMap` 中已经准备好了一个线程安全的接口——`appendTask`，这个接口用于在任意位置添加需要在指定位置执行的任务，目前支持五种任务：
+
++ `BEFORE_UPDATE` - 在 `update` 执行前触发
++ `AFTER_UPDATE` - 在 `update` 执行后触发
++ `BEFORE_RENDER` - 在 `render` 执行前触发
++ `AFTER_RENDER` - 在 `render` 执行后触发
++ `AFTER_LOGIC` - 在整个逻辑循环执行完毕并确定继续下一次逻辑循环后调用（该任务**仅在使用内置的时序控制时有效**）
+
+　　其中，`update` 相关任务和 `AFTER_LOGIC` 会在逻辑线程执行，`render` 相关任务会在渲染线程执行。
+
+　　引擎还提供了一个类似的接口——`appendReusableTask`，与前者不同的是，通过该函数添加的任务在执行后不会被移除，其中的任务会持续生效，如果需要删除任务，可以使用 `removeReusableTask` 函数。
+
+　　示例代码：：
 
 **Kotlin**
 
 ```Kotlin
 fun main() {
-  GMap.Builder.apply {
-    width = 80
-    height = 40
-  }.build().use { map ->
-    EventListener.registryKeyboardEvent(object : IKeyboardListener {
+    GMap.Builder.apply {
+        width = 80
+        height = 40
+    }.build().use { map ->
+        EventListener.registryKeyboardEvent(object : IKeyboardListener {
 
-      override fun onPressed(code: Int) {
-        map.runTaskOnLogicThread {
-          println("pressed: $code")
-          true
-        }
-      }
+            override fun onPressed(code: Int) {
+                map.appendTask(GMap.BEFORE_UPDATE) {
+                    println("pressed: $code")
+                }
+            }
 
-      override fun onReleased(code: Int) {
-        map.runTaskOnLogicThread {
-          println("released: $code")
-          true
-        }
-      }
+            override fun onReleased(code: Int) {
+                map.appendTask(GMap.BEFORE_UPDATE) {
+                    println("released: $code")
+                }
+            }
 
-      override fun onActive(code: Int) { }
+            override fun onActive(code: Int) { }
 
-    })
-    map.start(10, 50) { true }
-  }
-  GMap.Builder.dispose()
+        })
+        map.start(10, 50, 0) { true }
+    }
+    GMap.Builder.dispose()
 }
 ```
 
@@ -471,25 +554,20 @@ public class Main {
 
                 @Override
                 public void onPressed(int code) {
-                    map.runTaskOnLogicThread(() -> {
-                        System.out.println("pressed: $code");
-                        return false;
-                    });
+                    map.appendTask(GMap.BEFORE_UPDATE, () -> System.out.println("pressed: $code"));
                 }
 
                 @Override
                 public void onReleased(int code) {
-                    map.runTaskOnLogicThread(() -> {
-                        System.out.println("released: $code");
-                        return false;
-                    });
+                    map.appendTask(GMap.BEFORE_UPDATE, () -> System.out.println("released: $code"));
                 }
 
                 @Override
-                public void onActive(int code) { }
+                public void onActive(int code) {
+                }
 
             });
-            map.start(10, 50, () -> true);
+            map.start(10, 50, 0, () -> true);
         }
         GMap.Builder.dispose();
     }
