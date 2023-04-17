@@ -2,8 +2,8 @@ package top.kmar.game.plane
 
 import top.kmar.game.map.GEntity
 import top.kmar.game.map.GMap
-import top.kmar.game.map.Point2D
 import top.kmar.game.map.SafeGraphics
+import top.kmar.game.utils.Point2D
 import java.util.stream.Stream
 
 class PlayerPlane(
@@ -49,11 +49,8 @@ class PlayerPlane(
     override fun update(map: GMap, time: Long) {
         val bulletLeft = BulletEntity(this, x + 1, y + 2, 1, 1, 1)
         val bulletRight = BulletEntity(this, right - 1, y + 2, 1, 1, 1)
-        map.runTaskOnLogicThread {
-            map.putEntity(bulletLeft, 0)
-            map.putEntity(bulletRight, 0)
-            true
-        }
+        map.putEntity(bulletLeft, 0)
+        map.putEntity(bulletRight, 0)
         map.checkCollision(this)
             .forEach {
                 if (it is BulletEntity && it.owner != this) {

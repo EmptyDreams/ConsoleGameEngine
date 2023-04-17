@@ -2,8 +2,8 @@ package top.kmar.game.plane
 
 import top.kmar.game.map.GEntity
 import top.kmar.game.map.GMap
-import top.kmar.game.map.Point2D
 import top.kmar.game.map.SafeGraphics
+import top.kmar.game.utils.Point2D
 import java.util.stream.Stream
 
 open class EnemyPlaneEntity(
@@ -11,7 +11,7 @@ open class EnemyPlaneEntity(
     override var y: Int,
     override val width: Int,
     override val height: Int,
-    var blood: Int
+    private var blood: Int
 ) : GEntity {
 
     override val collisible = true
@@ -35,7 +35,7 @@ open class EnemyPlaneEntity(
         return builder.build()
     }
 
-    protected var timer = 0
+    private var timer = 0
 
     override fun update(map: GMap, time: Long) {
         if (blood == 0) died = true

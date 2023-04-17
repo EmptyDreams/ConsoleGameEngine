@@ -2,8 +2,8 @@ package top.kmar.game.plane
 
 import top.kmar.game.map.GEntity
 import top.kmar.game.map.GMap
-import top.kmar.game.map.Point2D
 import top.kmar.game.map.SafeGraphics
+import top.kmar.game.utils.Point2D
 import java.util.stream.Stream
 
 class BulletEntity(
