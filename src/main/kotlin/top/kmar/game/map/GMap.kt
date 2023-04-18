@@ -159,9 +159,14 @@ class GMap private constructor(
             }
         }
         val renderTimer = GTimer()
+        val record = IntArray(5)
+        var index = 0
         renderTimer.start("Render Thread", renderInterval, false) {
             render()
-            fps = if (it == 0L) Int.MAX_VALUE else (1000 / it).toInt()
+            record[index] = it.toInt()
+            if (++index == record.size) index = 0
+            val sum = record.sum()
+            fps = if (sum == 0) Int.MAX_VALUE else 1000 / sum
         }
         while (true) {
             Thread.sleep(1000)
