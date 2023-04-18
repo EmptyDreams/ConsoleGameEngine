@@ -19,7 +19,7 @@ open class EnemyPlaneEntity(
 
     override fun render(graphics: SafeGraphics) {
         for (y in 0 until height) {
-            graphics.fillRect('⊕', y, y, (height - y).shl(1) or 1, 1)
+            graphics.fillRect('⊕', y, y, (height - y) shl 1, 1)
         }
     }
 
@@ -41,13 +41,14 @@ open class EnemyPlaneEntity(
         if (blood == 0) died = true
         else if (++timer == 10) {
             timer = 0
-            if (++y == map.height) died = true
+            //if (++y == map.height) died = true
         }
         map.checkCollision(this)
             .forEach { onCollision(map, it) }
     }
 
     override fun onCollision(map: GMap, that: GEntity) {
+        return
         when (that) {
             is PlayerPlane -> {
                 died = true
