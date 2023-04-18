@@ -138,7 +138,7 @@ class GMap private constructor(
      * @param logicCondition 判断是否继续执行程序，返回 false 后会终止所有任务并退出当前函数
      */
     fun start(eventInterval: Long, logicInterval: Long, renderInterval: Long, logicCondition: BooleanSupplier) {
-        require(eventInterval > 0 && logicInterval > 0 && renderInterval > 0) {
+        require(eventInterval >= 0 && logicInterval >= 0 && renderInterval >= 0) {
             "eventInterval[$eventInterval]、logicInterval[$logicInterval] 和 renderInterval[$renderInterval] 均应大于 0"
         }
         require(!closed) { "当前 GMap 已经被关闭，无法执行动作" }
