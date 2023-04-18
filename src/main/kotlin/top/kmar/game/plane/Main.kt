@@ -4,7 +4,7 @@ import top.kmar.game.ConsolePrinter
 import top.kmar.game.EventListener
 import top.kmar.game.map.GMap
 import java.io.File
-import java.util.*
+import kotlin.random.Random
 
 fun main() {
     GMap.Builder.apply {
@@ -23,7 +23,7 @@ fun main() {
         var maxTime = 70
         var maxBlood = 50
         var time = 0
-        val random = Random()
+        val random = Random(System.currentTimeMillis())
         it.appendReusableTask(GMap.AFTER_LOGIC) {
             if (++time >= maxTime) {
                 time = 0
