@@ -27,10 +27,12 @@ JNIEXPORT void JNICALL Java_top_kmar_game_EventListener_getMouseLocationN(
     RECT rect;
     GetClientRect(console, &rect);
     ScreenToClient(console, &pos);
-    if (PtInRect(&rect, pos)) {
+    if (pos.x >= 0 && pos.x < rect.right) {
         int unitX = rect.right / width;
-        int unitY = rect.bottom / height;
         array[0] = pos.x / unitX;
+    }
+    if (pos.y >= 0 && pos.y < rect.bottom) {
+        int unitY = rect.bottom / height;
         array[1] = pos.y / unitY;
     }
     (*env)->ReleaseIntArrayElements(env, intArray, array, 0);
