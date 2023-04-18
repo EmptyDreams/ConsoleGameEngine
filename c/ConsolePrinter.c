@@ -15,33 +15,31 @@ HANDLE stdInput;
 static DWORD stdInputMode = 0;
 
 // 判断指定位置是否为占用两格宽的字符
-static bool isWideChar(HANDLE buffer, jint x, jint y) {
+// 返回 0 表示不是，返回 1 表示当前位置是第一格，2 表示为第二格
+static int checkWideChar(HANDLE buffer, jint x, jint y) {
     WCHAR value;
     DWORD tmp = 0;
     COORD coord = {(SHORT) x, (SHORT) y};
     ReadConsoleOutputCharacterW(buffer, &value, 1, coord, &tmp);
-    if (value >= 0x100) return true;
-    if (value != 32 || x == 0) return false;
+    if (value >= 0x100) return 1;
+    if (value != 32 || x == 0) return 0;
     --coord.X;
     ReadConsoleOutputCharacterW(buffer, &value, 1, coord, &tmp);
-    return value >= 0x100;
+    return value < 0x100 ? 0 : 2;
 }
 
-/*
- * 清理指定位置的文本。
- * 如果指定位置的文本是占用两个字节的字符，会将连续的两个字节全部移除。
- */
-static void clearOutput(HANDLE buffer, jint x, jint y) {
-    bool wide = isWideChar(buffer, x, y);
+// 清除指定位置上的字符
+static inline void clearPos(HANDLE buffer, int x, int y) {
     DWORD tmp = 0;
-    COORD coord = {(SHORT) (x - wide), (SHORT) y};
-    FillConsoleOutputCharacterA(buffer, ' ', 1 + wide, coord, &tmp);
+    COORD coord = {(SHORT) x, (SHORT) y};
+    WriteConsoleOutputCharacterA(buffer, " ", 1, coord, &tmp);
 }
 
 static void fillOutput(HANDLE buffer, jchar c, jint x, jint y, jint length) {
-    clearOutput(buffer, x, y);
-    if (length != 1) clearOutput(buffer, x + length - 1, y);
-    if (c >= 0x100) clearOutput(buffer, x + (length << 1), y);
+    int wide = checkWideChar(buffer, x + length - 1, y);
+    if (wide == 1) clearPos(buffer, x + length, y);
+    wide = checkWideChar(buffer, x - 1, y);
+    if (wide == 2) clearPos(buffer, x - 1, y);
     COORD pos = {(SHORT) x, (SHORT) y};
     DWORD tmp = 0;
     FillConsoleOutputCharacterW(buffer, c, length, pos, &tmp);
