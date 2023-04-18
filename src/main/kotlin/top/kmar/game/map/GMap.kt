@@ -15,6 +15,7 @@ import java.util.function.BooleanSupplier
 import java.util.stream.Collectors
 import java.util.stream.Stream
 import kotlin.concurrent.withLock
+import kotlin.math.roundToInt
 
 /**
  * 游戏地图，存储和地图相关的所有数据，同时负责地图的打印。
@@ -174,7 +175,7 @@ class GMap private constructor(
             render()
             record[index] = it.toInt()
             if (++index == record.size) index = 0
-            val sum = record.sum()
+            val sum = record.average().roundToInt()
             fps = if (sum == 0) Int.MAX_VALUE else 1000 / sum
         }
         while (true) {
