@@ -72,7 +72,7 @@ class SafeGraphics @Deprecated("不应当调用该构造函数创建对象") int
     fun modifyRect(attr: Int, x: Int, y: Int, width: Int, height: Int) {
         val bound = clip(x, y, width, height)
         if (bound.isEmpty) return
-        ConsolePrinter.modifyAttr(attr, x, y, width, height, index)
+        ConsolePrinter.modifyAttr(attr, bound.x, bound.y, bound.width, bound.height, index)
     }
 
     /**
