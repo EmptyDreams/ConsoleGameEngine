@@ -142,6 +142,8 @@ class GMap private constructor(
             "eventInterval[$eventInterval]、logicInterval[$logicInterval] 和 renderInterval[$renderInterval] 均应大于 0"
         }
         require(!closed) { "当前 GMap 已经被关闭，无法执行动作" }
+        require(!runFlag) { "不允许重复启动内置的逻辑控制" }
+        runFlag = true
         val eventTimer = GTimer()
         eventTimer.startNonFixed("Event Thread", eventInterval, true) {
             EventListener.pushButtonEvent()
@@ -231,6 +233,11 @@ class GMap private constructor(
         const val AFTER_RENDER = 3
         /** 在整个逻辑循环执行完毕并确定继续下一次逻辑循环后调用 */
         const val AFTER_LOGIC = 4
+
+        @JvmStatic
+        @Volatile
+        var runFlag = false
+            private set
 
     }
 
