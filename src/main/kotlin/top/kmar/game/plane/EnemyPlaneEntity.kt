@@ -41,14 +41,13 @@ open class EnemyPlaneEntity(
         if (blood == 0) died = true
         else if (++timer == 10) {
             timer = 0
-            //if (++y == map.height) died = true
+            if (++y == map.height) died = true
         }
         map.checkCollision(this)
             .forEach { onCollision(map, it) }
     }
 
     override fun onCollision(map: GMap, that: GEntity) {
-        return
         when (that) {
             is PlayerPlane -> {
                 died = true
