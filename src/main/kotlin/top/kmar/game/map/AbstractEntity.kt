@@ -11,20 +11,20 @@ abstract class AbstractEntity(
 
     @Volatile
     final override var visible = visible
-        private set
+        protected set
     final override var collisible = collisible
-        private set
+        protected set
     final override var x = x
-        private set
+        protected set
     final override var y = y
-        private set
+        protected set
     final override var width = width
-        private set
+        protected set
     final override var height = height
-        private set
+        protected set
     @Volatile
     final override var died = false
-        private set
+        protected set
 
     override fun beKilled(map: GMap, killer: GEntity) {
         died = true

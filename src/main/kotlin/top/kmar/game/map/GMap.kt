@@ -5,10 +5,12 @@ import top.kmar.game.EventListener
 import top.kmar.game.utils.GTimer
 import top.kmar.game.utils.Point2D
 import top.kmar.game.utils.TaskManager
+import top.kmar.game.utils.updateWith
 import java.io.Closeable
 import java.io.File
 import java.lang.ref.WeakReference
 import java.util.*
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.BooleanSupplier
 import java.util.stream.Collectors
 import java.util.stream.Stream
@@ -116,6 +118,8 @@ class GMap private constructor(
         reusableTaskManager.removeTask(flag, task)
     }
 
+    private val pauseFlag = AtomicInteger()
+
     /**
      * 让引擎接管所有时序控制。
      *
@@ -138,17 +142,21 @@ class GMap private constructor(
      * @param logicCondition 判断是否继续执行程序，返回 false 后会终止所有任务并退出当前函数
      */
     fun start(eventInterval: Long, logicInterval: Long, renderInterval: Long, logicCondition: BooleanSupplier) {
-        require(eventInterval > 0 && logicInterval > 0 && renderInterval > 0) {
+        require(eventInterval >= 0 && logicInterval >= 0 && renderInterval >= 0) {
             "eventInterval[$eventInterval]、logicInterval[$logicInterval] 和 renderInterval[$renderInterval] 均应大于 0"
         }
         require(!closed) { "当前 GMap 已经被关闭，无法执行动作" }
+        require(!runFlag) { "不允许重复启动内置的逻辑控制" }
+        runFlag = true
         val eventTimer = GTimer()
         eventTimer.startNonFixed("Event Thread", eventInterval, true) {
+            if (pauseFlag.get() and PAUSE_EVENT != 0) return@startNonFixed
             EventListener.pushButtonEvent()
             EventListener.pushMouseLocationEvent()
         }
         val logicTimer = GTimer()
-        logicTimer.start("Logic Thread", logicInterval, false) {
+        logicTimer.start("Logic Thread", logicInterval, false) logic@{
+            if (pauseFlag.get() and PAUSE_LOGIC != 0) return@logic
             update(it)
             entities.sync()
             if (stopped || !logicCondition.asBoolean) {
@@ -159,9 +167,15 @@ class GMap private constructor(
             }
         }
         val renderTimer = GTimer()
-        renderTimer.start("Render Thread", renderInterval, false) {
+        val record = IntArray(5)
+        var index = 0
+        renderTimer.start("Render Thread", renderInterval, false) render@{
+            if (pauseFlag.get() and PAUSE_RENDER != 0) return@render
             render()
-            fps = if (it == 0L) Int.MAX_VALUE else (1000 / it).toInt()
+            record[index] = it.toInt()
+            if (++index == record.size) index = 0
+            val sum = record.sum()
+            fps = if (sum == 0) Int.MAX_VALUE else 1000 / sum
         }
         while (true) {
             Thread.sleep(1000)
@@ -172,6 +186,46 @@ class GMap private constructor(
                 break
             }
         }
+    }
+
+    /** 暂停所有线程（线程安全） */
+    fun pauseAll() {
+        pauseFlag.updateWith { it or PAUSE_LOGIC or PAUSE_EVENT or PAUSE_RENDER }
+    }
+
+    /** 继续执行所有线程（线程安全） */
+    fun continueAll() {
+        pauseFlag.updateWith { it and (PAUSE_LOGIC or PAUSE_EVENT or PAUSE_RENDER).inv() }
+    }
+
+    /** 暂停逻辑线程（线程安全） */
+    fun pauseLogic() {
+        pauseFlag.updateWith { it or PAUSE_LOGIC }
+    }
+
+    /** 继续执行逻辑线程（线程安全） */
+    fun continueLogic() {
+        pauseFlag.updateWith { it and PAUSE_LOGIC.inv() }
+    }
+
+    /** 暂停渲染线程（线程安全） */
+    fun pauseRender() {
+        pauseFlag.updateWith { it or PAUSE_RENDER }
+    }
+
+    /** 继续执行渲染线程（线程安全） */
+    fun continueRender() {
+        pauseFlag.updateWith { it and PAUSE_RENDER.inv() }
+    }
+
+    /** 暂停事件线程（线程安全） */
+    fun pauseEvent() {
+        pauseFlag.updateWith { it or PAUSE_EVENT }
+    }
+
+    /** 继续执行事件线程（线程安全） */
+    fun continueEvent() {
+        pauseFlag.updateWith { it and PAUSE_EVENT.inv() }
     }
 
     /**
@@ -226,6 +280,15 @@ class GMap private constructor(
         const val AFTER_RENDER = 3
         /** 在整个逻辑循环执行完毕并确定继续下一次逻辑循环后调用 */
         const val AFTER_LOGIC = 4
+
+        private const val PAUSE_LOGIC = 0b1
+        private const val PAUSE_EVENT = 0b10
+        private const val PAUSE_RENDER = 0b100
+
+        @JvmStatic
+        @Volatile
+        var runFlag = false
+            private set
 
     }
 
