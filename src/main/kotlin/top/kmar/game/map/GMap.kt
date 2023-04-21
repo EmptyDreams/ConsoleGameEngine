@@ -12,7 +12,6 @@ import java.lang.ref.WeakReference
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.BooleanSupplier
-import java.util.function.LongConsumer
 import java.util.stream.Collectors
 import java.util.stream.Stream
 import kotlin.concurrent.withLock
@@ -79,6 +78,9 @@ class GMap private constructor(
         entities.add(entity, layout)
     }
 
+    private var renderLastTime = 0L
+    private var frameCount = 0
+
     /** 渲染所有实体 */
     fun render() {
         require(!closed) { "当前 GMap 已经被关闭，无法执行动作" }
@@ -94,6 +96,13 @@ class GMap private constructor(
         taskManager.runTaskList(AFTER_RENDER)
         reusableTaskManager.runTaskListNoRemove(AFTER_RENDER)
         ConsolePrinter.flush()
+        ++frameCount
+        val time = System.currentTimeMillis()
+        if (time - renderLastTime > 1000) {
+            fps = frameCount
+            renderLastTime = time
+            frameCount = 0
+        }
     }
 
     /**
@@ -168,23 +177,10 @@ class GMap private constructor(
             }
         }
         val renderTimer = GTimer()
-        renderTimer.start("Render Thread", renderInterval, false, object : LongConsumer {
-
-            var lastTime = System.currentTimeMillis()
-            var count = 0
-
-            override fun accept(it: Long) {
-                if (pauseFlag.get() and PAUSE_RENDER != 0) return
-                render()
-                ++count
-                val time = System.currentTimeMillis()
-                if (time - lastTime > 1000) {
-                    fps = (count / time).toInt()
-                    lastTime = time
-                    count = 0
-                }
-            }
-        })
+        renderTimer.start("Render Thread", renderInterval, false) render@{
+            if (pauseFlag.get() and PAUSE_RENDER != 0) return@render
+            render()
+        }
         while (true) {
             Thread.sleep(1000)
             if (!(logicTimer.alive && renderTimer.alive)) {
