@@ -27,7 +27,7 @@ class MapLayout(private val source: GMap) {
 
     /** 添加一个元素到地图中 */
     fun add(entity: GEntity, layer: Int) {
-        val list = if (map.containsKey(layer)) map[layer] else map.put(layer, ConcurrentLinkedQueue())
+        val list = if (map.containsKey(layer)) map[layer] else ConcurrentLinkedQueue<GEntity>().apply { map.put(layer, this) }
         list.add(entity)
         keyList.add(layer)
     }
