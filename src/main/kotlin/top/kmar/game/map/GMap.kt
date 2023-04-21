@@ -12,10 +12,10 @@ import java.lang.ref.WeakReference
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.BooleanSupplier
+import java.util.function.LongConsumer
 import java.util.stream.Collectors
 import java.util.stream.Stream
 import kotlin.concurrent.withLock
-import kotlin.math.roundToInt
 
 /**
  * 游戏地图，存储和地图相关的所有数据，同时负责地图的打印。
@@ -168,16 +168,23 @@ class GMap private constructor(
             }
         }
         val renderTimer = GTimer()
-        val record = IntArray(5)
-        var index = 0
-        renderTimer.start("Render Thread", renderInterval, false) render@{
-            if (pauseFlag.get() and PAUSE_RENDER != 0) return@render
-            render()
-            record[index] = it.toInt()
-            if (++index == record.size) index = 0
-            val sum = record.average().roundToInt()
-            fps = if (sum == 0) Int.MAX_VALUE else 1000 / sum
-        }
+        renderTimer.start("Render Thread", renderInterval, false, object : LongConsumer {
+
+            var lastTime = System.currentTimeMillis()
+            var count = 0
+
+            override fun accept(it: Long) {
+                if (pauseFlag.get() and PAUSE_RENDER != 0) return
+                render()
+                ++count
+                val time = System.currentTimeMillis()
+                if (time - lastTime > 1000) {
+                    fps = (count / time).toInt()
+                    lastTime = time
+                    count = 0
+                }
+            }
+        })
         while (true) {
             Thread.sleep(1000)
             if (!(logicTimer.alive && renderTimer.alive)) {
