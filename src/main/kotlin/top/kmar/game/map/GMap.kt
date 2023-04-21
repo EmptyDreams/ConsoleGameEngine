@@ -14,7 +14,6 @@ import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.BooleanSupplier
 import java.util.stream.Collectors
 import java.util.stream.Stream
-import kotlin.concurrent.withLock
 
 /**
  * 游戏地图，存储和地图相关的所有数据，同时负责地图的打印。
@@ -87,11 +86,9 @@ class GMap private constructor(
         clear()
         taskManager.runTaskList(BEFORE_RENDER)
         reusableTaskManager.runTaskListNoRemove(BEFORE_RENDER)
-        entities.lock.withLock {
-            visibleEntity.forEach {
-                val graphics = SafeGraphics(this, it.x, it.y, it.width, it.height, ConsolePrinter.index)
-                it.render(graphics)
-            }
+        visibleEntity.forEach {
+            val graphics = SafeGraphics(this, it.x, it.y, it.width, it.height, ConsolePrinter.index)
+            it.render(graphics)
         }
         taskManager.runTaskList(AFTER_RENDER)
         reusableTaskManager.runTaskListNoRemove(AFTER_RENDER)
